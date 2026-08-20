@@ -8,6 +8,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Pintando Histórias">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icone-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icone-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icone-180.png">
+<meta property="og:title" content="Pintando Histórias">
+<meta property="og:description" content="Histórias da Bíblia para as crianças pintarem.">
+<meta property="og:image" content="icone-512.png">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -86,7 +93,10 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 .topo-titulo small{display:block;font-size:13px;color:var(--ink-soft);font-weight:700;margin-top:2px}
 
 /* ---------- tela: perfis ---------- */
-.marca{text-align:center;margin:6px 0 4px}
+.marca{text-align:center;margin:2px 0 4px}
+.marca img{width:min(58vw,220px);aspect-ratio:1;display:block;margin:0 auto;
+  border-radius:26px;box-shadow:0 10px 26px rgba(43,33,64,.28)}
+.marca .so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .marca h1{margin:0;font-size:38px;font-weight:700;color:#fff;
   text-shadow:0 3px 0 #4FB8DE, 0 6px 14px rgba(43,33,64,.25);letter-spacing:.5px}
 .marca p{margin:8px auto 0;display:inline-block;background:rgba(255,255,255,.9);
@@ -227,7 +237,8 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 <!-- ============ TELA 1 · QUEM VAI PINTAR ============ -->
 <section id="telaPerfis" class="tela ceu ativa">
   <div class="marca">
-    <h1>Pintando Histórias</h1>
+    <img id="logo" src="icone.png" alt="Pintando Histórias">
+    <h1 id="tituloTexto" class="so-leitor">Pintando Histórias</h1>
     <p>Quem vai pintar hoje?</p>
   </div>
   <div class="perfis" id="listaPerfis"></div>
@@ -1538,6 +1549,17 @@ document.addEventListener('touchend', e => {
   if (agora - ultimoToque < 320) e.preventDefault();
   ultimoToque = agora;
 }, { passive:false });
+
+/* se o arquivo do ícone não estiver na pasta, mostra o título em texto */
+(() => {
+  const logo = $('#logo');
+  if (!logo) return;
+  logo.onerror = () => {
+    logo.remove();
+    const t = $('#tituloTexto');
+    if (t) t.classList.remove('so-leitor');
+  };
+})();
 
 /* ---------- início ---------- */
 renderPerfis();
