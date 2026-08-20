@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pintando Histórias</title>
+<meta name="theme-color" content="#7ED4F2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pintando Histórias">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFF7EC;
+  --ink:#2B2140;
+  --ink-soft:#6B5F86;
+  --violet:#6C4BD8;
+  --violet-dark:#5438B8;
+  --sun:#FFC53D;
+  --coral:#FF6B5A;
+  --leaf:#3FB27F;
+  --sky:#7ED4F2;
+  --sky-deep:#4FB8DE;
+  --card:#FFFFFF;
+  --shadow:0 6px 0 rgba(43,33,64,.12), 0 12px 28px rgba(43,33,64,.14);
+  --shadow-sm:0 4px 0 rgba(43,33,64,.10), 0 8px 18px rgba(43,33,64,.10);
+  --r-lg:26px;
+  --r-md:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:'Nunito',system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--paper);
+  overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;
+}
+h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
+
+/* ---------- estrutura de telas ---------- */
+.tela{display:none;min-height:100dvh;flex-direction:column;align-items:center;
+  padding:max(14px,env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));}
+.tela.ativa{display:flex}
+.tela > *{width:100%;max-width:520px;margin-left:auto;margin-right:auto}
+.ceu{background:linear-gradient(180deg,#8FDCF6 0%,#BDE9FA 42%,#E7F7EC 100%)}
+.papel{background:var(--paper)}
+
+/* ---------- botões ---------- */
+.btn{
+  font-family:'Fredoka',sans-serif;font-size:17px;font-weight:600;
+  border:none;border-radius:999px;padding:14px 22px;
+  background:var(--card);color:var(--ink);
+  box-shadow:var(--shadow-sm);cursor:pointer;
+  display:inline-flex;align-items:center;gap:9px;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,33,64,.10)}
+.btn:focus-visible{outline:4px solid var(--violet);outline-offset:3px}
+.btn-icone{width:56px;height:56px;padding:0;justify-content:center;font-size:24px;flex:0 0 auto}
+.btn-violeta{background:var(--violet);color:#fff}
+.btn-coral{background:var(--coral);color:#fff}
+.btn-folha{background:var(--leaf);color:#fff}
+.btn-sol{background:var(--sun);color:var(--ink)}
+
+/* ---------- fita adesiva (assinatura visual) ---------- */
+.fita{position:relative}
+.fita::before,.fita::after{
+  content:"";position:absolute;width:74px;height:24px;
+  background:rgba(255,214,102,.62);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);
+  top:-11px;z-index:3;pointer-events:none;
+}
+.fita::before{left:14px;transform:rotate(-7deg)}
+.fita::after{right:14px;transform:rotate(6deg)}
+
+/* ---------- topo ---------- */
+.topo{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex:0 0 auto}
+.topo-titulo{flex:1;text-align:center;background:rgba(255,255,255,.92);
+  border-radius:var(--r-md);padding:10px 14px;box-shadow:var(--shadow-sm)}
+.topo-titulo h2{margin:0;font-size:21px;line-height:1.15}
+.topo-titulo small{display:block;font-size:13px;color:var(--ink-soft);font-weight:700;margin-top:2px}
+
+/* ---------- tela: perfis ---------- */
+.marca{text-align:center;margin:6px 0 4px}
+.marca h1{margin:0;font-size:38px;font-weight:700;color:#fff;
+  text-shadow:0 3px 0 #4FB8DE, 0 6px 14px rgba(43,33,64,.25);letter-spacing:.5px}
+.marca p{margin:8px auto 0;display:inline-block;background:rgba(255,255,255,.9);
+  border-radius:999px;padding:8px 18px;font-weight:700;color:var(--ink-soft);font-size:15px}
+.perfis{display:flex;flex-direction:column;gap:18px;margin:26px auto 0;width:100%;max-width:420px}
+.perfil{
+  display:flex;align-items:center;gap:18px;background:var(--card);
+  border:none;border-radius:var(--r-lg);padding:18px 20px;
+  box-shadow:var(--shadow);cursor:pointer;text-align:left;width:100%;
+  transition:transform .14s ease;
+}
+.perfil:active{transform:scale(.97)}
+.perfil-bicho{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;
+  font-size:42px;flex:0 0 auto;box-shadow:inset 0 -5px 0 rgba(0,0,0,.08)}
+.perfil-nome{font-family:'Fredoka',sans-serif;font-size:26px;font-weight:600}
+.rodape-perfis{margin-top:auto;padding-top:22px;text-align:center}
+
+/* ---------- tela: histórias ---------- */
+.faixa-quem{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.92);
+  border-radius:999px;padding:7px 16px 7px 7px;box-shadow:var(--shadow-sm);border:none;
+  font-family:'Fredoka',sans-serif;font-size:17px;color:var(--ink);cursor:pointer}
+.faixa-quem .bola{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:22px}
+.rolagem{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:10px}
+.historias{display:flex;flex-direction:column;gap:26px;max-width:460px;margin:14px auto 0}
+.historia{background:var(--card);border:none;border-radius:var(--r-lg);padding:0;overflow:hidden;
+  box-shadow:var(--shadow);cursor:pointer;text-align:left;width:100%;transition:transform .14s ease}
+.historia:active{transform:scale(.98)}
+.historia-capa{height:150px;overflow:hidden;background:#EAF7FF;display:block}
+.historia-capa svg{width:100%;height:100%;display:block}
+.historia-txt{padding:14px 18px 18px}
+.historia-txt h3{margin:0;font-size:23px}
+.historia-txt span{font-weight:700;font-size:14px;color:var(--ink-soft)}
+.progresso{display:flex;gap:6px;margin-top:10px}
+.pip{width:26px;height:9px;border-radius:999px;background:#E6E0F0}
+.pip.on{background:var(--leaf)}
+.em-breve{opacity:.55}
+.em-breve .historia-capa{filter:grayscale(.7)}
+
+/* ---------- tela: história ---------- */
+.pergaminho{background:linear-gradient(180deg,#FFE9B8,#FFD98A);border-radius:var(--r-md);
+  padding:18px 20px;box-shadow:var(--shadow-sm);max-width:460px;margin:0 auto 8px}
+.pergaminho p{margin:0;font-size:16.5px;line-height:1.55;font-weight:700;color:#5B3F14}
+.versiculo{max-width:460px;margin:14px auto 0;text-align:center;font-family:'Fredoka',sans-serif;
+  font-size:17px;color:var(--ink);background:rgba(255,255,255,.9);border-radius:var(--r-md);
+  padding:14px 18px;box-shadow:var(--shadow-sm);line-height:1.4}
+.versiculo b{display:block;font-size:13.5px;color:var(--ink-soft);margin-top:6px;font-family:'Nunito';font-weight:800}
+.linha-ouvir{display:flex;justify-content:center;margin:14px 0 4px}
+.aviso-adulto{text-align:center;font-size:13px;font-weight:800;color:var(--ink-soft);
+  margin:16px auto 6px;max-width:460px}
+.cenas{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:460px;margin:10px auto 0}
+.cena{background:var(--card);border:none;border-radius:var(--r-md);padding:8px;box-shadow:var(--shadow-sm);
+  cursor:pointer;position:relative;transition:transform .14s ease}
+.cena:active{transform:scale(.96)}
+.cena svg{width:100%;height:auto;display:block;border-radius:12px}
+.cena b{display:block;text-align:center;font-size:13.5px;margin-top:8px;color:var(--ink-soft)}
+.selo{position:absolute;top:-9px;right:-9px;width:36px;height:36px;border-radius:50%;
+  background:var(--leaf);color:#fff;display:grid;place-items:center;font-size:19px;
+  box-shadow:0 3px 8px rgba(43,33,64,.28)}
+
+/* ---------- tela: pintura ---------- */
+#telaPintar{padding-left:10px;padding-right:10px}
+.oficina{display:flex;flex-direction:column;flex:1;min-height:0;width:100%}
+.quadro{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin:2px 0 8px}
+.moldura{position:relative;aspect-ratio:400/520;max-height:100%;max-width:100%;background:#fff;
+  border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;touch-action:none}
+.moldura.ampliada{cursor:grab}
+.moldura.ampliada:active{cursor:grabbing}
+.zoomavel{width:100%;height:100%;transform-origin:center center;-webkit-user-drag:none}
+.moldura svg{width:100%;height:100%;display:block;-webkit-user-drag:none}
+.lupa{position:absolute;top:10px;right:10px;z-index:5;width:48px;height:48px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.94);box-shadow:var(--shadow-sm);cursor:pointer;
+  font-family:'Fredoka',sans-serif;font-size:18px;font-weight:600;color:var(--ink);
+  display:grid;place-items:center}
+.lupa.on{background:var(--violet);color:#fff}
+
+/* no computador: desenho grande à esquerda, cores em coluna à direita */
+@media (min-width:860px) and (min-height:560px){
+  #telaPintar .topo{max-width:900px}
+  #telaPintar .oficina{flex-direction:row;align-items:stretch;gap:26px;max-width:900px}
+  #telaPintar .quadro{margin:0}
+  .lateral{flex:0 0 236px;display:flex;flex-direction:column;justify-content:center;gap:18px}
+  .lateral .cores{grid-template-columns:repeat(4,1fr)}
+  .lateral .acoes-pintura{flex-direction:column;margin-top:0}
+  .lateral .acoes-pintura .btn{width:100%;justify-content:center}
+  .lateral .acoes-pintura .btn-icone{width:100%;height:52px}
+}
+/* IMPORTANTE: a cor de preenchimento NUNCA é declarada aqui.
+   Em SVG, uma regra CSS vence o atributo fill — e a pintura não apareceria. */
+.rg{stroke:#2B2140;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;
+  cursor:pointer;transition:fill .12s ease}
+.tinta{pointer-events:none}
+.rg.pop{animation:pop .26s ease}
+@keyframes pop{0%{opacity:.35}60%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .rg.pop{animation:none}
+  *{transition-duration:.01ms !important}
+}
+.paleta{flex:0 0 auto;display:flex;align-items:center;gap:10px}
+.cores{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:9px}
+.cor{width:100%;aspect-ratio:1;border-radius:50%;border:none;cursor:pointer;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.14), 0 2px 6px rgba(43,33,64,.18);
+  transition:transform .12s ease}
+.cor:active{transform:scale(.9)}
+.cor.sel{outline:4px solid var(--violet);outline-offset:3px;transform:scale(1.06)}
+.cor.borracha{background:#fff;display:grid;place-items:center;font-size:20px}
+.acoes-pintura{flex:0 0 auto;display:flex;gap:10px;justify-content:center;margin-top:12px}
+
+/* ---------- galeria ---------- */
+.galeria{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:460px;margin:18px auto 0}
+.quadrinho{background:#fff;border-radius:14px;padding:9px;box-shadow:var(--shadow-sm)}
+.quadrinho svg{width:100%;height:auto;display:block;border-radius:8px}
+.quadrinho b{display:block;text-align:center;font-size:12.5px;margin-top:7px;color:var(--ink-soft)}
+.vazio{text-align:center;margin:40px auto;max-width:320px;color:var(--ink-soft);font-weight:700;font-size:16px}
+.vazio span{display:block;font-size:56px;margin-bottom:10px}
+
+/* ---------- modais ---------- */
+.fundo-modal{position:fixed;inset:0;background:rgba(43,33,64,.55);display:none;
+  align-items:center;justify-content:center;padding:22px;z-index:60}
+.fundo-modal.ativo{display:flex}
+.modal{background:var(--card);border-radius:var(--r-lg);padding:26px 22px;max-width:400px;width:100%;
+  box-shadow:0 18px 40px rgba(43,33,64,.35);text-align:center;max-height:86dvh;overflow-y:auto}
+.modal h3{margin:0 0 10px;font-size:23px}
+.modal p{margin:0 0 20px;font-weight:700;color:var(--ink-soft);font-size:15.5px;line-height:1.5}
+.modal-botoes{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.campo{display:flex;align-items:center;gap:12px;margin-bottom:14px;text-align:left}
+.campo button.av{width:56px;height:56px;border-radius:50%;border:none;font-size:28px;cursor:pointer;
+  flex:0 0 auto;box-shadow:inset 0 -4px 0 rgba(0,0,0,.08)}
+.campo input{flex:1;min-width:0;font-family:'Fredoka',sans-serif;font-size:18px;padding:12px 14px;
+  border:2.5px solid #E6E0F0;border-radius:14px;background:#FBF9FF;color:var(--ink)}
+.campo input:focus{outline:none;border-color:var(--violet)}
+#modalSalvo img{width:100%;border-radius:14px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<!-- ============ TELA 1 · QUEM VAI PINTAR ============ -->
+<section id="telaPerfis" class="tela ceu ativa">
+  <div class="marca">
+    <h1>Pintando Histórias</h1>
+    <p>Quem vai pintar hoje?</p>
+  </div>
+  <div class="perfis" id="listaPerfis"></div>
+  <div class="rodape-perfis">
+    <button class="btn" id="btnConfig">✏️ Trocar nomes</button>
+  </div>
+</section>
+
+<!-- ============ TELA 2 · HISTÓRIAS ============ -->
+<section id="telaHistorias" class="tela ceu">
+  <div class="topo">
+    <button class="faixa-quem" id="btnTrocarPerfil">
+      <span class="bola" id="bolaPerfil">🦊</span><span id="nomePerfil">Neto</span>
+    </button>
+    <button class="btn btn-icone btn-violeta" id="btnGaleria" aria-label="Minha galeria">🖼️</button>
+  </div>
+  <div class="rolagem">
+    <div class="historias" id="listaHistorias"></div>
+  </div>
+</section>
+
+<!-- ============ TELA 3 · UMA HISTÓRIA ============ -->
+<section id="telaHistoria" class="tela ceu">
+  <div class="topo">
+    <button class="btn btn-icone" id="btnVoltarHistorias" aria-label="Voltar">←</button>
+    <div class="topo-titulo">
+      <h2 id="tituloHistoria">A Criação</h2>
+      <small id="refHistoria">Gênesis 1:1–31</small>
+    </div>
+    <button class="btn btn-icone btn-violeta" id="btnOuvir" aria-label="Ouvir a história">🔊</button>
+  </div>
+  <div class="rolagem">
+    <div class="pergaminho fita"><p id="resumoHistoria"></p></div>
+    <div class="linha-ouvir"><button class="btn btn-sol" id="btnOuvir2">🔊 Ouvir a história</button></div>
+    <div class="versiculo" id="versiculoHistoria"></div>
+    <p class="aviso-adulto">Escolha um desenho para pintar</p>
+    <div class="cenas" id="listaCenas"></div>
+  </div>
+</section>
+
+<!-- ============ TELA 4 · PINTAR ============ -->
+<section id="telaPintar" class="tela papel">
+  <div class="topo">
+    <button class="btn btn-icone" id="btnVoltarPintura" aria-label="Voltar">←</button>
+    <div class="topo-titulo">
+      <h2 id="tituloCena">A Criação</h2>
+      <small>Toque nas cores e depois no desenho</small>
+    </div>
+    <button class="btn btn-icone btn-sol" id="btnDesfazer" aria-label="Desfazer">↶</button>
+  </div>
+  <div class="oficina">
+    <div class="quadro" id="quadro"></div>
+    <div class="lateral">
+      <div class="paleta">
+        <div class="cores" id="cores"></div>
+      </div>
+      <div class="acoes-pintura">
+        <button class="btn btn-icone btn-coral" id="btnZerar" aria-label="Começar de novo">🗑️</button>
+        <button class="btn btn-violeta" id="btnCompartilhar">📤 Guardar</button>
+        <button class="btn btn-folha" id="btnConcluir">✓ Pronto</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TELA 5 · GALERIA ============ -->
+<section id="telaGaleria" class="tela papel">
+  <div class="topo">
+    <button class="btn btn-icone" id="btnVoltarGaleria" aria-label="Voltar">←</button>
+    <div class="topo-titulo"><h2>Minha galeria</h2><small id="galeriaDono"></small></div>
+    <span style="width:56px"></span>
+  </div>
+  <div class="rolagem"><div id="conteudoGaleria"></div></div>
+</section>
+
+<!-- ============ MODAIS ============ -->
+<div class="fundo-modal" id="modalConfig">
+  <div class="modal">
+    <h3>Quem usa o app</h3>
+    <p>Toque no bichinho para trocar o desenho de cada um.</p>
+    <div id="camposConfig"></div>
+    <div class="modal-botoes">
+      <button class="btn" data-fechar="modalConfig">Cancelar</button>
+      <button class="btn btn-folha" id="btnSalvarConfig">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="fundo-modal" id="modalZerar">
+  <div class="modal">
+    <h3>Começar de novo?</h3>
+    <p>Todas as cores deste desenho vão sair.</p>
+    <div class="modal-botoes">
+      <button class="btn" data-fechar="modalZerar">Não, continuar pintando</button>
+      <button class="btn btn-coral" id="btnZerarSim">Sim, apagar tudo</button>
+    </div>
+  </div>
+</div>
+
+<div class="fundo-modal" id="modalSalvo">
+  <div class="modal">
+    <h3>Sua pintura</h3>
+    <p id="txtSalvo">Segure a imagem com o dedo e escolha <b>Salvar em Fotos</b>.</p>
+    <img id="imgSalvo" alt="Pintura pronta">
+    <div class="modal-botoes"><button class="btn btn-violeta" data-fechar="modalSalvo">Fechar</button></div>
+  </div>
+</div>
+
+<div class="fundo-modal" id="modalParabens">
+  <div class="modal">
+    <h3>🎉 Ficou lindo!</h3>
+    <p>Sua pintura foi guardada na galeria.</p>
+    <div class="modal-botoes"><button class="btn btn-folha" data-fechar="modalParabens">Pintar outro</button></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   PINTANDO HISTÓRIAS · Bloco 1
+   ========================================================= */
+
+/* ---------- armazenamento tolerante a falhas ---------- */
+const store = (() => {
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return localStorage; }
+  catch(e){ const m={}; return { getItem:k=>(k in m?m[k]:null), setItem:(k,v)=>{m[k]=String(v)}, removeItem:k=>{delete m[k]} }; }
+})();
+const CHAVE = 'ph:v1:';
+const ler   = (k,p) => { try { return JSON.parse(store.getItem(CHAVE+k)) ?? p; } catch(e){ return p; } };
+const gravar= (k,v) => { try { store.setItem(CHAVE+k, JSON.stringify(v)); } catch(e){} };
+
+/* ---------- perfis ---------- */
+const BICHOS = ['🦊','🐨','🐼','🦁','🐸','🐧','🐢','🦉','🐝','🦄','🐬','🐿️'];
+const FUNDOS = ['#FFD9C2','#D7EEFF','#E2F5D6','#FFE7A8','#F0DEFF','#FFD6E8'];
+let perfis = ler('perfis', [
+  { id:'p1', nome:'Neto 1', bicho:'🦊', fundo:'#FFD9C2' },
+  { id:'p2', nome:'Neto 2', bicho:'🐨', fundo:'#D7EEFF' },
+  { id:'p3', nome:'Neto 3', bicho:'🐼', fundo:'#E2F5D6' }
+]);
+let perfilAtual = null;
+
+/* ---------- paleta de pintura ---------- */
+const CORES = ['#E8453C','#F5822B','#F7B32B','#F5E14B','#8BC34A','#3B9E5A','#7FD1E8',
+               '#2E7FD4','#9B6BD6','#F07FB8','#D9A066','#8A5A3B','#3D3550'];
+let corAtual = CORES[0];
+
+/* =========================================================
+   DESENHOS — cada região é um caminho fechado e clicável
+   ========================================================= */
+const VB = '0 0 400 520';
+/* toda região nasce com fill branco COMO ATRIBUTO — nunca por CSS */
+const prep = c => c.replace(/class="rg"/g, 'class="rg" fill="#FFFFFF"')
+                   .replace(/class="tinta"/g, 'class="tinta" fill="#2B2140"');
+const svgWrap = (conteudo, id) =>
+  `<svg viewBox="${VB}" xmlns="http://www.w3.org/2000/svg" data-cena="${id}">${prep(conteudo)}</svg>`;
+const nuvem = (x,y,e,id) =>
+  `<path class="rg" id="${id}" transform="translate(${x},${y}) scale(${e})" d="M12 48 C2 48 0 40 0 34 C0 26 6 22 14 22 C16 8 30 2 42 6 C50 -2 66 -2 74 8 C88 6 98 16 96 28 C106 30 110 38 106 44 C104 47 100 48 96 48 Z"/>`;
+const sol = (cx,cy,r,id) => {
+  let raios = '';
+  for (let i=0;i<8;i++){
+    const a = i*Math.PI/4, x1 = cx+Math.cos(a)*(r+7), y1 = cy+Math.sin(a)*(r+7);
+    const x2 = cx+Math.cos(a)*(r+26), y2 = cy+Math.sin(a)*(r+26);
+    const px = -Math.sin(a)*10, py = Math.cos(a)*10;
+    raios += `<path class="rg" id="${id}-raio${i}" d="M${x1+px} ${y1+py} L${x2} ${y2} L${x1-px} ${y1-py} Z"/>`;
+  }
+  return raios + `<circle class="rg" id="${id}" cx="${cx}" cy="${cy}" r="${r}"/>`;
+};
+const onda = (y,fim) =>
+  `M0 ${y} C45 ${y-13} 90 ${y+13} 135 ${y} C180 ${y-13} 225 ${y+13} 270 ${y} C312 ${y-11} 356 ${y+11} 400 ${y} L400 ${fim} L0 ${fim} Z`;
+const flor = (x,y,e,id) =>
+  `<g transform="translate(${x},${y}) scale(${e})">
+     <path class="rg" id="${id}-p" d="M0 -20 C10 -20 14 -10 8 -4 C18 -10 26 -2 20 6 C26 14 18 24 8 20 C8 30 -8 30 -8 20 C-18 24 -26 14 -20 6 C-26 -2 -18 -10 -8 -4 C-14 -10 -10 -20 0 -20 Z"/>
+     <circle class="rg" id="${id}-m" cx="0" cy="0" r="7.5"/>
+   </g>`;
+const olho = (cx,cy,r=3.6) => `<circle class="tinta" cx="${cx}" cy="${cy}" r="${r}"/>`;
+
+/* --- Cena 1 · O céu e as águas --- */
+const CENA1 = svgWrap(`
+  <rect class="rg" id="c1-ceu" x="0" y="0" width="400" height="520"/>
+  ${sol(322,74,36,'c1-sol')}
+  ${nuvem(28,96,1.15,'c1-n1')}
+  ${nuvem(206,44,0.85,'c1-n2')}
+  ${nuvem(46,182,0.95,'c1-n3')}
+  ${nuvem(224,164,1.1,'c1-n4')}
+  <path class="rg" id="c1-a1" d="${onda(292,520)}"/>
+  <path class="rg" id="c1-a2" d="${onda(336,520)}"/>
+  <path class="rg" id="c1-a3" d="${onda(382,520)}"/>
+  <path class="rg" id="c1-a4" d="${onda(428,520)}"/>
+  <path class="rg" id="c1-a5" d="${onda(474,520)}"/>
+`,'c1');
+
+/* --- Cena 2 · A terra e as plantas --- */
+const CENA2 = svgWrap(`
+  <rect class="rg" id="c2-ceu" x="0" y="0" width="400" height="520"/>
+  ${sol(330,66,32,'c2-sol')}
+  ${nuvem(36,58,0.85,'c2-n1')}
+  <path class="rg" id="c2-morro1" d="M0 268 C64 214 138 226 212 266 L212 520 L0 520 Z"/>
+  <path class="rg" id="c2-morro2" d="M188 270 C258 216 330 230 400 262 L400 520 L188 520 Z"/>
+  <path class="rg" id="c2-chao" d="M0 306 C120 292 280 292 400 304 L400 520 L0 520 Z"/>
+  <path class="rg" id="c2-rio" d="M152 306 C122 356 202 386 172 436 C152 470 192 494 178 520 L238 520 C252 494 218 470 238 436 C268 386 188 356 218 306 Z"/>
+  <path class="rg" id="c2-tronco1" d="M52 436 L52 362 L78 362 L78 436 Z"/>
+  <circle class="rg" id="c2-copa1a" cx="65" cy="338" r="40"/>
+  <circle class="rg" id="c2-copa1b" cx="30" cy="360" r="25"/>
+  <circle class="rg" id="c2-copa1c" cx="98" cy="358" r="27"/>
+  <path class="rg" id="c2-tronco2" d="M320 424 L320 358 L342 358 L342 424 Z"/>
+  <circle class="rg" id="c2-copa2a" cx="331" cy="334" r="35"/>
+  <circle class="rg" id="c2-copa2b" cx="302" cy="352" r="22"/>
+  <circle class="rg" id="c2-copa2c" cx="362" cy="350" r="24"/>
+  <ellipse class="rg" id="c2-arbusto1" cx="96" cy="480" rx="36" ry="23"/>
+  <ellipse class="rg" id="c2-arbusto2" cx="296" cy="466" rx="40" ry="25"/>
+  ${flor(44,432,0.8,'c2-f1')}
+  ${flor(120,494,0.9,'c2-f2')}
+  ${flor(300,404,0.75,'c2-f3')}
+  ${flor(362,492,0.85,'c2-f4')}
+`,'c2');
+
+/* --- Cena 3 · Os peixes e as aves --- */
+const ave = (x,y,e,id) =>
+  `<path class="rg" id="${id}" transform="translate(${x},${y}) scale(${e})" d="M0 0 C10 -13 24 -13 32 -2 C40 -13 54 -13 64 0 C50 7 39 5 32 -2 C25 5 13 7 0 0 Z"/>`;
+const peixe = (x,y,e,id) =>
+  `<g transform="translate(${x},${y}) scale(${e})">
+     <path class="rg" id="${id}-r" d="M0 6 L-28 -12 L-28 24 Z"/>
+     <path class="rg" id="${id}-c" d="M0 0 C12 -18 42 -20 58 -6 C68 3 68 11 58 21 C42 34 12 30 0 12 C-3 8 -3 4 0 0 Z"/>
+     ${olho(46,4,3.4)}
+   </g>`;
+const CENA3 = svgWrap(`
+  <rect class="rg" id="c3-ceu" x="0" y="0" width="400" height="520"/>
+  ${sol(58,62,28,'c3-sol')}
+  ${nuvem(230,42,0.9,'c3-n1')}
+  ${ave(88,128,1.05,'c3-ave1')}
+  ${ave(196,88,0.8,'c3-ave2')}
+  ${ave(276,142,0.95,'c3-ave3')}
+  <path class="rg" id="c3-mar" d="${onda(238,520)}"/>
+  <path class="rg" id="c3-mar2" d="${onda(300,520)}"/>
+  <path class="rg" id="c3-jato" d="M168 300 C162 278 150 266 152 252 C160 262 172 266 176 256 C182 270 176 288 182 300 Z"/>
+  <path class="rg" id="c3-baleia" d="M116 348 C116 306 168 290 214 297 C256 304 282 324 287 352 C290 380 260 402 214 403 C162 404 116 388 116 348 Z"/>
+  <path class="rg" id="c3-rabo" d="M287 352 C302 326 332 310 350 304 C344 330 346 360 352 386 C332 380 302 372 287 352 Z"/>
+  ${olho(158,332,5)}
+  ${peixe(96,452,0.9,'c3-p1')}
+  ${peixe(226,486,0.7,'c3-p2')}
+  ${peixe(322,436,0.8,'c3-p3')}
+  <path class="rg" id="c3-alga1" d="M28 520 C16 488 40 466 28 438 C48 460 56 494 50 520 Z"/>
+  <path class="rg" id="c3-alga2" d="M372 520 C384 492 362 470 374 444 C354 466 346 496 352 520 Z"/>
+`,'c3');
+
+/* --- Cena 4 · Os animais e as pessoas --- */
+const CENA4 = svgWrap(`
+  <rect class="rg" id="c4-ceu" x="0" y="0" width="400" height="520"/>
+  ${sol(330,62,30,'c4-sol')}
+  ${nuvem(28,54,0.8,'c4-n1')}
+  <path class="rg" id="c4-chao" d="M0 322 C120 304 280 304 400 320 L400 520 L0 520 Z"/>
+  <path class="rg" id="c4-tronco" d="M28 334 L28 244 L50 244 L50 334 Z"/>
+  <circle class="rg" id="c4-copaA" cx="39" cy="226" r="37"/>
+  <circle class="rg" id="c4-copaB" cx="12" cy="248" r="21"/>
+  <circle class="rg" id="c4-copaC" cx="66" cy="246" r="23"/>
+
+  <path class="rg" id="c4-g-pernas" d="M306 418 L306 470 L316 470 L316 418 Z M340 420 L340 472 L350 472 L350 420 Z"/>
+  <ellipse class="rg" id="c4-g-corpo" cx="330" cy="398" rx="42" ry="27"/>
+  <path class="rg" id="c4-g-pescoco" d="M348 386 L340 296 L364 294 L374 382 Z"/>
+  <ellipse class="rg" id="c4-g-cabeca" cx="360" cy="286" rx="21" ry="14"/>
+  ${olho(366,282,3.2)}
+
+  <path class="rg" id="c4-h-cabelo" d="M204 356 C204 336 218 328 230 328 C242 328 256 336 256 356 C256 344 246 340 230 340 C214 340 214 346 204 356 Z"/>
+  <circle class="rg" id="c4-h-cabeca" cx="230" cy="350" r="17"/>
+  <path class="rg" id="c4-h-corpo" d="M213 368 L247 368 L256 438 L204 438 Z"/>
+  ${olho(224,349,2.6)}${olho(236,349,2.6)}
+  <circle class="rg" id="c4-m-cabeca" cx="176" cy="348" r="17"/>
+  <path class="rg" id="c4-m-corpo" d="M159 366 L193 366 L201 436 L151 436 Z"/>
+  ${olho(170,347,2.6)}${olho(182,347,2.6)}
+
+  <ellipse class="rg" id="c4-e-corpo" cx="292" cy="466" rx="50" ry="34"/>
+  <path class="rg" id="c4-e-tromba" d="M238 456 C224 478 228 504 244 512 C238 494 238 474 250 462 Z"/>
+  <circle class="rg" id="c4-e-cabeca" cx="248" cy="450" r="27"/>
+  <ellipse class="rg" id="c4-e-orelha" cx="252" cy="440" rx="15" ry="20"/>
+  ${olho(238,444,3.4)}
+
+  <ellipse class="rg" id="c4-l-corpo" cx="146" cy="472" rx="37" ry="26"/>
+  <circle class="rg" id="c4-l-juba" cx="102" cy="452" r="35"/>
+  <circle class="rg" id="c4-l-cabeca" cx="102" cy="452" r="22"/>
+  ${olho(95,448,3.2)}${olho(110,448,3.2)}
+
+  <path class="rg" id="c4-c-orelhas" d="M196 492 C192 470 194 456 200 456 C206 456 208 470 206 490 Z M212 492 C210 470 214 456 220 456 C226 456 226 472 220 492 Z"/>
+  <ellipse class="rg" id="c4-c-corpo" cx="208" cy="500" rx="21" ry="17"/>
+  ${olho(202,497,2.8)}
+`,'c4');
+
+/* =========================================================
+   CONTEÚDO — histórias
+   ========================================================= */
+const HISTORIAS = [
+  {
+    id:'criacao', titulo:'A Criação', ref:'Gênesis 1:1–31', capa:'c1',
+    resumo:'No princípio, Deus criou o céu e a terra. Tudo era escuro e vazio. Então Deus falou: "Haja luz!" — e a luz apareceu. Dia após dia, Ele foi enchendo o mundo de coisas boas: separou as águas e fez o céu; juntou o mar e fez a terra seca aparecer, coberta de plantas e de árvores cheias de frutos. Pôs o sol, a lua e as estrelas lá no alto. Encheu o mar de peixes e o céu de aves. Fez os animais que andam pela terra. E, por último, criou o ser humano — homem e mulher — parecidos com Ele, para cuidar de tudo o que Ele havia feito. Deus olhou para tudo e viu que era muito bom.',
+    versiculo:'No princípio, Deus criou os céus e a terra.', versRef:'Gênesis 1:1',
+    cenas:[
+      { id:'c1', titulo:'O céu e as águas',      ref:'Gênesis 1:6–8',   svg:CENA1 },
+      { id:'c2', titulo:'A terra e as plantas',  ref:'Gênesis 1:11–12', svg:CENA2 },
+      { id:'c3', titulo:'Os peixes e as aves',   ref:'Gênesis 1:20–22', svg:CENA3 },
+      { id:'c4', titulo:'Os animais e as pessoas', ref:'Gênesis 1:24–27', svg:CENA4 }
+    ]
+  },
+  { id:'noe',    titulo:'A Arca de Noé', ref:'Gênesis 6–9',    capa:null, emBreve:true },
+  { id:'jose',   titulo:'José do Egito', ref:'Gênesis 37–45',  capa:null, emBreve:true },
+  { id:'moises', titulo:'Moisés',        ref:'Êxodo 2–14',     capa:null, emBreve:true }
+];
+
+/* =========================================================
+   ESTADO E NAVEGAÇÃO
+   ========================================================= */
+let historiaAtual = null, cenaAtual = null, pilhaDesfazer = [], svgAtual = null;
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+function mostrar(id){
+  $$('.tela').forEach(t => t.classList.remove('ativa'));
+  $('#'+id).classList.add('ativa');
+  window.scrollTo(0,0);
+  const r = $('#'+id+' .rolagem'); if (r) r.scrollTop = 0;
+}
+const chavePintura = (pid, hid, cid) => `pintura:${pid}:${hid}:${cid}`;
+const lerPintura   = (pid,hid,cid) => ler(chavePintura(pid,hid,cid), { cores:{}, pronto:false });
+
+/* ---------- perfis ---------- */
+function renderPerfis(){
+  $('#listaPerfis').innerHTML = perfis.map(p => `
+    <button class="perfil" data-perfil="${p.id}">
+      <span class="perfil-bicho" style="background:${p.fundo}">${p.bicho}</span>
+      <span class="perfil-nome">${p.nome}</span>
+    </button>`).join('');
+  $$('#listaPerfis .perfil').forEach(b =>
+    b.onclick = () => { entrar(perfis.find(p => p.id === b.dataset.perfil)); });
+}
+function entrar(p){
+  perfilAtual = p;
+  gravar('ultimoPerfil', p.id);
+  $('#bolaPerfil').textContent = p.bicho;
+  $('#bolaPerfil').style.background = p.fundo;
+  $('#nomePerfil').textContent = p.nome;
+  renderHistorias();
+  mostrar('telaHistorias');
+}
+
+/* ---------- lista de histórias ---------- */
+function renderHistorias(){
+  $('#listaHistorias').innerHTML = HISTORIAS.map(h => {
+    if (h.emBreve) return `
+      <div class="historia em-breve">
+        <div class="historia-capa" style="display:grid;place-items:center;font-size:52px">🔒</div>
+        <div class="historia-txt"><h3>${h.titulo}</h3><span>Em breve</span></div>
+      </div>`;
+    const feitas = h.cenas.filter(c => lerPintura(perfilAtual.id, h.id, c.id).pronto).length;
+    return `
+      <button class="historia" data-hist="${h.id}">
+        <div class="historia-capa">${miniatura(h, h.cenas[0])}</div>
+        <div class="historia-txt">
+          <h3>${h.titulo}</h3><span>${h.ref}</span>
+          <div class="progresso">${h.cenas.map((c,i) =>
+            `<span class="pip ${i < feitas ? 'on':''}"></span>`).join('')}</div>
+        </div>
+      </button>`;
+  }).join('');
+  $$('#listaHistorias .historia[data-hist]').forEach(b =>
+    b.onclick = () => abrirHistoria(HISTORIAS.find(h => h.id === b.dataset.hist)));
+}
+
+/* aplica as cores salvas numa cópia do desenho (usado nas miniaturas) */
+function miniatura(h, cena){
+  const salvo = lerPintura(perfilAtual.id, h.id, cena.id).cores;
+  const doc = new DOMParser().parseFromString(cena.svg, 'image/svg+xml');
+  const svg = doc.documentElement;
+  Object.entries(salvo).forEach(([id, cor]) => {
+    const el = svg.querySelector('[id="'+id+'"]'); if (el) el.setAttribute('fill', cor);
+  });
+  return new XMLSerializer().serializeToString(svg);
+}
+
+/* ---------- tela de uma história ---------- */
+function abrirHistoria(h){
+  historiaAtual = h;
+  $('#tituloHistoria').textContent = h.titulo;
+  $('#refHistoria').textContent    = h.ref;
+  $('#resumoHistoria').textContent = h.resumo;
+  $('#versiculoHistoria').innerHTML = `“${h.versiculo}”<b>${h.versRef}</b>`;
+  $('#listaCenas').innerHTML = h.cenas.map(c => {
+    const pronto = lerPintura(perfilAtual.id, h.id, c.id).pronto;
+    return `<button class="cena" data-cena="${c.id}">
+              ${pronto ? '<span class="selo">✓</span>' : ''}
+              ${miniatura(h, c)}<b>${c.titulo}</b>
+            </button>`;
+  }).join('');
+  $$('#listaCenas .cena').forEach(b =>
+    b.onclick = () => abrirPintura(h.cenas.find(c => c.id === b.dataset.cena)));
+  mostrar('telaHistoria');
+}
+
+/* ---------- pintura ---------- */
+/* ---------- pintura, zoom e arrasto ---------- */
+const NIVEIS = [1, 1.9, 2.8];
+let zoom = 1, panX = 0, panY = 0;
+let arrastando = false, moveu = false, ini = {x:0,y:0}, iniPan = {x:0,y:0};
+
+/* o CSS sozinho encolhia o desenho; aqui o tamanho é calculado */
+function ajustarMoldura(){
+  const q = $('#quadro'), m = $('#quadro .moldura');
+  if (!m || !q.clientHeight) return;
+  const esc = Math.min(q.clientWidth / 400, q.clientHeight / 520);
+  m.style.width  = Math.floor(400 * esc) + 'px';
+  m.style.height = Math.floor(520 * esc) + 'px';
+  aplicarZoom();
+}
+window.addEventListener('resize', () => {
+  if ($('#telaPintar').classList.contains('ativa')) ajustarMoldura();
+});
+
+function aplicarZoom(){
+  const z = $('#quadro .zoomavel'); if (!z) return;
+  const limX = (zoom-1) * z.clientWidth  / 2;
+  const limY = (zoom-1) * z.clientHeight / 2;
+  panX = Math.max(-limX, Math.min(limX, panX));
+  panY = Math.max(-limY, Math.min(limY, panY));
+  z.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+  const b = $('#btnZoom');
+  if (b){
+    b.textContent = zoom === 1 ? '🔍' : String(zoom).replace('.', ',') + '×';
+    b.classList.toggle('on', zoom > 1);
+  }
+  const m = $('#quadro .moldura');
+  if (m) m.classList.toggle('ampliada', zoom > 1);
+}
+function trocarZoom(){
+  zoom = NIVEIS[(NIVEIS.indexOf(zoom) + 1) % NIVEIS.length];
+  if (zoom === 1){ panX = 0; panY = 0; }
+  aplicarZoom();
+}
+function aoDescer(e){
+  /* o botão da lupa precisa do clique normal — não interceptar */
+  if (e.target.closest && e.target.closest('.lupa')) return;
+  /* sem isto, o navegador de desktop inicia um "arrastar imagem" e trava o movimento */
+  e.preventDefault();
+  arrastando = true; moveu = false;
+  ini = { x:e.clientX, y:e.clientY };
+  iniPan = { x:panX, y:panY };
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
+}
+function aoMover(e){
+  if (!arrastando) return;
+  const dx = e.clientX - ini.x, dy = e.clientY - ini.y;
+  if (Math.abs(dx) > 7 || Math.abs(dy) > 7) moveu = true;
+  if (zoom > 1 && moveu){
+    panX = iniPan.x + dx; panY = iniPan.y + dy;
+    aplicarZoom(); e.preventDefault();
+  }
+}
+function aoSubir(e){
+  if (!arrastando) return;
+  arrastando = false;
+  if (moveu) return;                       /* foi arrasto, não pintura */
+  const sob = document.elementFromPoint(e.clientX, e.clientY);
+  const regiao = sob && sob.closest ? sob.closest('.rg') : null;
+  if (regiao) pintar(regiao);
+}
+function pintar(alvo){
+  const anterior = alvo.getAttribute('fill') || '#FFFFFF';
+  if (anterior === corAtual) return;
+  pilhaDesfazer.push({ id: alvo.id, cor: anterior });
+  alvo.setAttribute('fill', corAtual);
+  alvo.classList.remove('pop'); void alvo.offsetWidth; alvo.classList.add('pop');
+  salvarPintura();
+}
+
+function abrirPintura(cena){
+  cenaAtual = cena;
+  pilhaDesfazer = [];
+  zoom = 1; panX = 0; panY = 0;
+  $('#tituloCena').textContent = cena.titulo;
+  $('#quadro').innerHTML =
+    `<div class="moldura">
+       <button class="lupa" id="btnZoom" aria-label="Aproximar o desenho">🔍</button>
+       <div class="zoomavel">${cena.svg}</div>
+     </div>`;
+  svgAtual = $('#quadro svg');
+  const salvo = lerPintura(perfilAtual.id, historiaAtual.id, cena.id).cores;
+  Object.entries(salvo).forEach(([id, cor]) => {
+    const el = svgAtual.querySelector('[id="'+id+'"]'); if (el) el.setAttribute('fill', cor);
+  });
+  const mold = $('#quadro .moldura');
+  mold.addEventListener('dragstart', e => e.preventDefault());
+  mold.addEventListener('pointerdown', aoDescer);
+  mold.addEventListener('pointermove', aoMover);
+  mold.addEventListener('pointerup', aoSubir);
+  mold.addEventListener('pointercancel', () => { arrastando = false; });
+  $('#btnZoom').addEventListener('click', ev => { ev.stopPropagation(); trocarZoom(); });
+  mostrar('telaPintar');
+  ajustarMoldura();
+}
+function salvarPintura(pronto){
+  const cores = {};
+  svgAtual.querySelectorAll('.rg').forEach(el => {
+    const f = el.getAttribute('fill');
+    if (f && f.toUpperCase() !== '#FFFFFF') cores[el.id] = f;
+  });
+  const antes = lerPintura(perfilAtual.id, historiaAtual.id, cenaAtual.id);
+  gravar(chavePintura(perfilAtual.id, historiaAtual.id, cenaAtual.id),
+         { cores, pronto: pronto === undefined ? antes.pronto : pronto });
+}
+function renderPaleta(){
+  $('#cores').innerHTML =
+    CORES.map(c => `<button class="cor" data-cor="${c}" style="background:${c}" aria-label="Cor"></button>`).join('')
+    + `<button class="cor borracha" data-cor="#FFFFFF" aria-label="Apagar cor">🧽</button>`;
+  $$('#cores .cor').forEach(b => b.onclick = () => {
+    corAtual = b.dataset.cor;
+    $$('#cores .cor').forEach(o => o.classList.remove('sel'));
+    b.classList.add('sel');
+  });
+  $('#cores .cor').classList.add('sel');
+}
+
+/* ---------- exportar em PNG ---------- */
+async function gerarPNG(){
+  const clone = svgAtual.cloneNode(true);
+  clone.setAttribute('width', 900); clone.setAttribute('height', 1170);
+  const fundo = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  fundo.setAttribute('x',0); fundo.setAttribute('y',0);
+  fundo.setAttribute('width',400); fundo.setAttribute('height',520);
+  fundo.setAttribute('fill','#FFFFFF');
+  clone.insertBefore(fundo, clone.firstChild);
+  clone.querySelectorAll('.rg').forEach(el => {
+    if (!el.getAttribute('fill')) el.setAttribute('fill','#FFFFFF');
+    el.setAttribute('stroke','#2B2140'); el.setAttribute('stroke-width','2.6');
+    el.setAttribute('stroke-linejoin','round');
+  });
+  clone.querySelectorAll('.tinta').forEach(el => el.setAttribute('fill','#2B2140'));
+  const texto = new XMLSerializer().serializeToString(clone);
+  const url = URL.createObjectURL(new Blob([texto], { type:'image/svg+xml;charset=utf-8' }));
+  const img = new Image();
+  await new Promise((ok, erro) => { img.onload = ok; img.onerror = erro; img.src = url; });
+  const canvas = document.createElement('canvas');
+  canvas.width = 900; canvas.height = 1170;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,900,1170);
+  ctx.drawImage(img, 0, 0, 900, 1170);
+  URL.revokeObjectURL(url);
+  return new Promise(ok => canvas.toBlob(ok, 'image/png'));
+}
+async function compartilhar(){
+  let blob;
+  try { blob = await gerarPNG(); } catch(e){ return; }
+  if (!blob) return;
+  const nome = `${historiaAtual.titulo} - ${cenaAtual.titulo}.png`.replace(/[\/\\:]/g,'-');
+  const arquivo = new File([blob], nome, { type:'image/png' });
+  if (navigator.canShare && navigator.canShare({ files:[arquivo] })) {
+    try { await navigator.share({ files:[arquivo], title:'Pintando Histórias' }); return; }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  if ('download' in a) {
+    a.href = url; a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return;
+  }
+  $('#imgSalvo').src = url;
+  abrirModal('modalSalvo');
+}
+
+/* ---------- galeria ---------- */
+function abrirGaleria(){
+  $('#galeriaDono').textContent = perfilAtual.nome;
+  const itens = [];
+  HISTORIAS.filter(h => !h.emBreve).forEach(h =>
+    h.cenas.forEach(c => {
+      if (lerPintura(perfilAtual.id, h.id, c.id).pronto)
+        itens.push(`<div class="quadrinho fita">${miniatura(h,c)}<b>${c.titulo}</b></div>`);
+    }));
+  $('#conteudoGaleria').innerHTML = itens.length
+    ? `<div class="galeria">${itens.join('')}</div>`
+    : `<div class="vazio"><span>🎨</span>Nenhuma pintura aqui ainda.<br>Escolha uma história e comece!</div>`;
+  mostrar('telaGaleria');
+}
+
+/* ---------- voz ---------- */
+let vozPT = null;
+function carregarVozes(){
+  const vs = speechSynthesis.getVoices() || [];
+  vozPT = vs.find(v => /pt[-_]BR/i.test(v.lang)) || vs.find(v => /^pt/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window){
+  carregarVozes();
+  speechSynthesis.onvoiceschanged = carregarVozes;
+}
+function falar(){
+  if (!('speechSynthesis' in window) || !historiaAtual) return;
+  if (speechSynthesis.speaking){ speechSynthesis.cancel(); return; }
+  if (!vozPT) carregarVozes();
+  const f = new SpeechSynthesisUtterance(historiaAtual.resumo);
+  f.lang = 'pt-BR'; f.rate = 0.92; f.pitch = 1.05;
+  if (vozPT) f.voice = vozPT;
+  speechSynthesis.speak(f);
+}
+
+/* ---------- modais ---------- */
+const abrirModal  = id => $('#'+id).classList.add('ativo');
+const fecharModal = id => $('#'+id).classList.remove('ativo');
+$$('[data-fechar]').forEach(b => b.onclick = () => fecharModal(b.dataset.fechar));
+$$('.fundo-modal').forEach(f => f.onclick = e => { if (e.target === f) f.classList.remove('ativo'); });
+
+function abrirConfig(){
+  $('#camposConfig').innerHTML = perfis.map((p,i) => `
+    <div class="campo">
+      <button class="av" data-i="${i}" style="background:${p.fundo}">${p.bicho}</button>
+      <input type="text" maxlength="14" value="${p.nome}" data-nome="${i}" placeholder="Nome">
+    </div>`).join('');
+  $$('#camposConfig .av').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i;
+    const prox = (BICHOS.indexOf(b.textContent.trim()) + 1) % BICHOS.length;
+    b.textContent = BICHOS[prox];
+    b.style.background = FUNDOS[prox % FUNDOS.length];
+  });
+  abrirModal('modalConfig');
+}
+$('#btnSalvarConfig').onclick = () => {
+  $$('#camposConfig .campo').forEach((c,i) => {
+    const nome = c.querySelector('input').value.trim();
+    perfis[i].nome  = nome || `Neto ${i+1}`;
+    perfis[i].bicho = c.querySelector('.av').textContent.trim();
+    perfis[i].fundo = c.querySelector('.av').style.background;
+  });
+  gravar('perfis', perfis);
+  renderPerfis();
+  if (perfilAtual){
+    perfilAtual = perfis.find(p => p.id === perfilAtual.id);
+    $('#bolaPerfil').textContent = perfilAtual.bicho;
+    $('#nomePerfil').textContent = perfilAtual.nome;
+  }
+  fecharModal('modalConfig');
+};
+
+/* ---------- ligações de botões ---------- */
+$('#btnConfig').onclick        = abrirConfig;
+$('#btnTrocarPerfil').onclick  = () => { renderPerfis(); mostrar('telaPerfis'); };
+$('#btnGaleria').onclick       = abrirGaleria;
+$('#btnVoltarGaleria').onclick = () => mostrar('telaHistorias');
+$('#btnVoltarHistorias').onclick = () => {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  renderHistorias(); mostrar('telaHistorias');
+};
+$('#btnOuvir').onclick  = falar;
+$('#btnOuvir2').onclick = falar;
+
+$('#btnVoltarPintura').onclick = () => { salvarPintura(); abrirHistoria(historiaAtual); };
+$('#btnDesfazer').onclick = () => {
+  const passo = pilhaDesfazer.pop(); if (!passo) return;
+  const el = svgAtual.querySelector('[id="'+passo.id+'"]');
+  if (el){ el.setAttribute('fill', passo.cor); salvarPintura(); }
+};
+$('#btnZerar').onclick = () => abrirModal('modalZerar');
+$('#btnZerarSim').onclick = () => {
+  svgAtual.querySelectorAll('.rg').forEach(el => el.setAttribute('fill','#FFFFFF'));
+  pilhaDesfazer = []; salvarPintura(false); fecharModal('modalZerar');
+};
+$('#btnCompartilhar').onclick = compartilhar;
+$('#btnConcluir').onclick = () => { salvarPintura(true); abrirModal('modalParabens'); };
+$('#modalParabens').addEventListener('click', function handler(e){
+  if (e.target.dataset.fechar || e.target === this) abrirHistoria(historiaAtual);
+});
+
+/* evita zoom por duplo toque no iOS */
+let ultimoToque = 0;
+document.addEventListener('touchend', e => {
+  const agora = Date.now();
+  if (agora - ultimoToque < 320) e.preventDefault();
+  ultimoToque = agora;
+}, { passive:false });
+
+/* ---------- início ---------- */
+renderPerfis();
+renderPaleta();
+</script>
+</body>
+</html>
