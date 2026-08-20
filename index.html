@@ -152,8 +152,10 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 .quadro{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin:2px 0 8px}
 .moldura{position:relative;aspect-ratio:400/520;max-height:100%;max-width:100%;background:#fff;
   border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;touch-action:none}
-.zoomavel{width:100%;height:100%;transform-origin:center center}
-.moldura svg{width:100%;height:100%;display:block}
+.moldura.ampliada{cursor:grab}
+.moldura.ampliada:active{cursor:grabbing}
+.zoomavel{width:100%;height:100%;transform-origin:center center;-webkit-user-drag:none}
+.moldura svg{width:100%;height:100%;display:block;-webkit-user-drag:none}
 .lupa{position:absolute;top:10px;right:10px;z-index:5;width:48px;height:48px;border-radius:50%;
   border:none;background:rgba(255,255,255,.94);box-shadow:var(--shadow-sm);cursor:pointer;
   font-family:'Fredoka',sans-serif;font-size:18px;font-weight:600;color:var(--ink);
@@ -624,6 +626,19 @@ const NIVEIS = [1, 1.9, 2.8];
 let zoom = 1, panX = 0, panY = 0;
 let arrastando = false, moveu = false, ini = {x:0,y:0}, iniPan = {x:0,y:0};
 
+/* o CSS sozinho encolhia o desenho; aqui o tamanho é calculado */
+function ajustarMoldura(){
+  const q = $('#quadro'), m = $('#quadro .moldura');
+  if (!m || !q.clientHeight) return;
+  const esc = Math.min(q.clientWidth / 400, q.clientHeight / 520);
+  m.style.width  = Math.floor(400 * esc) + 'px';
+  m.style.height = Math.floor(520 * esc) + 'px';
+  aplicarZoom();
+}
+window.addEventListener('resize', () => {
+  if ($('#telaPintar').classList.contains('ativa')) ajustarMoldura();
+});
+
 function aplicarZoom(){
   const z = $('#quadro .zoomavel'); if (!z) return;
   const limX = (zoom-1) * z.clientWidth  / 2;
@@ -636,6 +651,8 @@ function aplicarZoom(){
     b.textContent = zoom === 1 ? '🔍' : String(zoom).replace('.', ',') + '×';
     b.classList.toggle('on', zoom > 1);
   }
+  const m = $('#quadro .moldura');
+  if (m) m.classList.toggle('ampliada', zoom > 1);
 }
 function trocarZoom(){
   zoom = NIVEIS[(NIVEIS.indexOf(zoom) + 1) % NIVEIS.length];
@@ -643,6 +660,10 @@ function trocarZoom(){
   aplicarZoom();
 }
 function aoDescer(e){
+  /* o botão da lupa precisa do clique normal — não interceptar */
+  if (e.target.closest && e.target.closest('.lupa')) return;
+  /* sem isto, o navegador de desktop inicia um "arrastar imagem" e trava o movimento */
+  e.preventDefault();
   arrastando = true; moveu = false;
   ini = { x:e.clientX, y:e.clientY };
   iniPan = { x:panX, y:panY };
@@ -690,13 +711,14 @@ function abrirPintura(cena){
     const el = svgAtual.querySelector('[id="'+id+'"]'); if (el) el.setAttribute('fill', cor);
   });
   const mold = $('#quadro .moldura');
+  mold.addEventListener('dragstart', e => e.preventDefault());
   mold.addEventListener('pointerdown', aoDescer);
   mold.addEventListener('pointermove', aoMover);
   mold.addEventListener('pointerup', aoSubir);
   mold.addEventListener('pointercancel', () => { arrastando = false; });
   $('#btnZoom').addEventListener('click', ev => { ev.stopPropagation(); trocarZoom(); });
   mostrar('telaPintar');
-  aplicarZoom();
+  ajustarMoldura();
 }
 function salvarPintura(pronto){
   const cores = {};
