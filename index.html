@@ -46,6 +46,7 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 .tela{display:none;min-height:100dvh;flex-direction:column;
   padding:max(14px,env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));}
 .tela.ativa{display:flex}
+.tela > *{width:100%;max-width:520px;margin-left:auto;margin-right:auto}
 .ceu{background:linear-gradient(180deg,#8FDCF6 0%,#BDE9FA 42%,#E7F7EC 100%)}
 .papel{background:var(--paper)}
 
@@ -148,11 +149,14 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 /* ---------- tela: pintura ---------- */
 #telaPintar{padding-left:10px;padding-right:10px}
 .quadro{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin:2px 0 8px}
-.quadro svg{max-width:100%;max-height:100%;width:auto;height:auto;
-  background:#fff;border-radius:16px;box-shadow:var(--shadow-sm);touch-action:none}
-.rg{fill:#FFFFFF;stroke:#2B2140;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;
+.moldura{aspect-ratio:400/520;max-height:100%;max-width:100%;background:#fff;
+  border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden}
+.moldura svg{width:100%;height:100%;display:block;touch-action:none}
+/* IMPORTANTE: a cor de preenchimento NUNCA é declarada aqui.
+   Em SVG, uma regra CSS vence o atributo fill — e a pintura não apareceria. */
+.rg{stroke:#2B2140;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;
   cursor:pointer;transition:fill .12s ease}
-.tinta{fill:#2B2140;pointer-events:none}
+.tinta{pointer-events:none}
 .rg.pop{animation:pop .26s ease}
 @keyframes pop{0%{opacity:.35}60%{opacity:1}}
 @media (prefers-reduced-motion:reduce){
@@ -346,7 +350,11 @@ let corAtual = CORES[0];
    DESENHOS — cada região é um caminho fechado e clicável
    ========================================================= */
 const VB = '0 0 400 520';
-const svgWrap = (conteudo, id) => `<svg viewBox="${VB}" xmlns="http://www.w3.org/2000/svg" data-cena="${id}">${conteudo}</svg>`;
+/* toda região nasce com fill branco COMO ATRIBUTO — nunca por CSS */
+const prep = c => c.replace(/class="rg"/g, 'class="rg" fill="#FFFFFF"')
+                   .replace(/class="tinta"/g, 'class="tinta" fill="#2B2140"');
+const svgWrap = (conteudo, id) =>
+  `<svg viewBox="${VB}" xmlns="http://www.w3.org/2000/svg" data-cena="${id}">${prep(conteudo)}</svg>`;
 const nuvem = (x,y,e,id) =>
   `<path class="rg" id="${id}" transform="translate(${x},${y}) scale(${e})" d="M12 48 C2 48 0 40 0 34 C0 26 6 22 14 22 C16 8 30 2 42 6 C50 -2 66 -2 74 8 C88 6 98 16 96 28 C106 30 110 38 106 44 C104 47 100 48 96 48 Z"/>`;
 const sol = (cx,cy,r,id) => {
@@ -592,7 +600,7 @@ function abrirPintura(cena){
   cenaAtual = cena;
   pilhaDesfazer = [];
   $('#tituloCena').textContent = cena.titulo;
-  $('#quadro').innerHTML = cena.svg;
+  $('#quadro').innerHTML = `<div class="moldura">${cena.svg}</div>`;
   svgAtual = $('#quadro svg');
   const salvo = lerPintura(perfilAtual.id, historiaAtual.id, cena.id).cores;
   Object.entries(salvo).forEach(([id, cor]) => {
