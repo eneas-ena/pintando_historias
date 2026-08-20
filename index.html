@@ -517,25 +517,45 @@ const CENA3 = svgWrap(`
 `,'c3');
 
 /* ---------- CENA 4 · Os animais e as pessoas ---------- */
-function pessoa(x, chao, e, id, tipo){
+function pessoa(x, chao, e, id, tipo, o){
+  o = o || {};
   const cr=21*e, cy=chao-124*e, ombro=cy+cr+9*e;
-  const bracos = rg(id+'-bracos',
-    `M${n2(x-20*e)} ${n2(ombro+2*e)} L${n2(x-42*e)} ${n2(ombro+12*e)} L${n2(x-47*e)} ${n2(ombro+50*e)} L${n2(x-31*e)} ${n2(ombro+53*e)} Z`
-  + ` M${n2(x+20*e)} ${n2(ombro+2*e)} L${n2(x+42*e)} ${n2(ombro+12*e)} L${n2(x+47*e)} ${n2(ombro+50*e)} L${n2(x+31*e)} ${n2(ombro+53*e)} Z`);
+  const off = o.bracos==='cima'   ? [[-40,-56],[40,-56]]
+            : o.bracos==='aberto' ? [[-50,24],[50,24]]
+            : o.bracos==='um'     ? [[-40,-56],[42,52]]
+            : [[-40,52],[40,52]];
+  const bracos = barra(id+'-bracoE', x-20*e, ombro+4*e, x+off[0][0]*e, ombro+off[0][1]*e, 14*e)
+               + barra(id+'-bracoD', x+20*e, ombro+4*e, x+off[1][0]*e, ombro+off[1][1]*e, 14*e);
+  const maos = circ(id+'-maoE', x+off[0][0]*e, ombro+off[0][1]*e, 9*e)
+             + circ(id+'-maoD', x+off[1][0]*e, ombro+off[1][1]*e, 9*e);
   const tunica = rg(id+'-tunica',
       `M${n2(x-26*e)} ${n2(ombro+4*e)} C${n2(x-26*e)} ${n2(ombro-10*e)} ${n2(x+26*e)} ${n2(ombro-10*e)} ${n2(x+26*e)} ${n2(ombro+4*e)}`
     + ` L${n2(x+36*e)} ${n2(chao)} L${n2(x-36*e)} ${n2(chao)} Z`);
-  const maos = circ(id+'-maoE', x-39*e, ombro+58*e, 9.5*e) + circ(id+'-maoD', x+39*e, ombro+58*e, 9.5*e);
-  const cabelo = tipo==='longo' ? rg(id+'-cabelo', blobD(x, cy+14*e, cr*1.52, 8, 1.12)) : '';
+  let listras='';
+  if (o.listras) [0.32,0.52,0.72].forEach(f=>{
+    const yy=ombro+(chao-ombro)*f, w=(26+10*f)*e;
+    listras += det(`M${n2(x-w)} ${n2(yy)} L${n2(x+w)} ${n2(yy)}`);
+  });
+  const cabelo = tipo==='longo' ? rg(id+'-cabelo',
+      `M${n2(x)} ${n2(cy-cr*1.42)} C${n2(x+cr*1.42)} ${n2(cy-cr*1.42)} ${n2(x+cr*1.34)} ${n2(cy+cr*1.9)} ${n2(x+cr*0.72)} ${n2(cy+cr*1.96)}`
+    + ` C${n2(x+cr*0.96)} ${n2(cy+cr*0.6)} ${n2(x+cr*0.96)} ${n2(cy-cr*0.2)} ${n2(x)} ${n2(cy-cr*0.26)}`
+    + ` C${n2(x-cr*0.96)} ${n2(cy-cr*0.2)} ${n2(x-cr*0.96)} ${n2(cy+cr*0.6)} ${n2(x-cr*0.72)} ${n2(cy+cr*1.96)}`
+    + ` C${n2(x-cr*1.34)} ${n2(cy+cr*1.9)} ${n2(x-cr*1.42)} ${n2(cy-cr*1.42)} ${n2(x)} ${n2(cy-cr*1.42)} Z`) : '';
   const cabeca = circ(id+'-cabeca', x, cy, cr);
   const capa = tipo==='curto'
     ? rg(id+'-cabelo',
         `M${n2(x-cr)} ${n2(cy-4*e)} C${n2(x-cr*1.05)} ${n2(cy-cr*1.55)} ${n2(x+cr*1.05)} ${n2(cy-cr*1.55)} ${n2(x+cr)} ${n2(cy-4*e)}`
       + ` C${n2(x+cr*0.55)} ${n2(cy-cr*0.8)} ${n2(x-cr*0.55)} ${n2(cy-cr*0.8)} ${n2(x-cr)} ${n2(cy-4*e)} Z`)
     : '';
+  const barba = o.barba ? rg(id+'-barba',
+      `M${n2(x-cr*0.86)} ${n2(cy+cr*0.06)} C${n2(x-cr*1.0)} ${n2(cy+cr*1.15)} ${n2(x-cr*0.52)} ${n2(cy+cr*1.85)} ${n2(x)} ${n2(cy+cr*1.9)}`
+    + ` C${n2(x+cr*0.52)} ${n2(cy+cr*1.85)} ${n2(x+cr*1.0)} ${n2(cy+cr*1.15)} ${n2(x+cr*0.86)} ${n2(cy+cr*0.06)}`
+    + ` C${n2(x+cr*0.5)} ${n2(cy+cr*0.66)} ${n2(x-cr*0.5)} ${n2(cy+cr*0.66)} ${n2(x-cr*0.86)} ${n2(cy+cr*0.06)} Z`) : '';
+  const extra = (o.coroa ? coroa(id+'-coroa', x, cy-cr*0.82, e) : '')
+              + (o.capacete ? capacete(id+'-capacete', x, cy-cr*0.1, cr) : '');
   const rosto = pt(x-7.5*e, cy-3*e, 3*e) + pt(x+7.5*e, cy-3*e, 3*e)
-    + det(`M${n2(x-7*e)} ${n2(cy+7*e)} C${n2(x-2*e)} ${n2(cy+13*e)} ${n2(x+2*e)} ${n2(cy+13*e)} ${n2(x+7*e)} ${n2(cy+7*e)}`);
-  return bracos+maos+tunica+cabelo+cabeca+capa+rosto;
+    + (o.barba ? '' : det(`M${n2(x-7*e)} ${n2(cy+7*e)} C${n2(x-2*e)} ${n2(cy+13*e)} ${n2(x+2*e)} ${n2(cy+13*e)} ${n2(x+7*e)} ${n2(cy+7*e)}`));
+  return bracos+maos+tunica+listras+cabelo+cabeca+capa+barba+extra+rosto;
 }
 
 function leao(x, chao, e, id){
@@ -607,24 +627,543 @@ const CENA4 = svgWrap(`
   ${grama(20,514,0.85)}${grama(384,510,0.8)}
 `,'c4');
 
+
+/* =========================================================
+   PEÇAS REUTILIZÁVEIS
+   ========================================================= */
+function barra(id,x1,y1,x2,y2,w){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1;
+  const px=-dy/L*w/2, py=dx/L*w/2;
+  return rg(id,`M${n2(x1+px)} ${n2(y1+py)} L${n2(x2+px)} ${n2(y2+py)} L${n2(x2-px)} ${n2(y2-py)} L${n2(x1-px)} ${n2(y1-py)} Z`);
+}
+function estrela(id,cx,cy,r){
+  let d='';
+  for(let i=0;i<10;i++){
+    const a=(i/10)*2*Math.PI-Math.PI/2, rr=i%2===0?r:r*0.42;
+    d+=(i===0?'M':'L')+`${n2(cx+Math.cos(a)*rr)} ${n2(cy+Math.sin(a)*rr)}`;
+  }
+  return rg(id,d+'Z');
+}
+function lua(id,cx,cy,r){
+  return rg(id,`M${n2(cx+r*0.35)} ${n2(cy-r)} A${n2(r)} ${n2(r)} 0 1 0 ${n2(cx+r*0.35)} ${n2(cy+r)}`
+    +` A${n2(r*0.82)} ${n2(r*0.82)} 0 1 1 ${n2(cx+r*0.35)} ${n2(cy-r)} Z`);
+}
+function montanha(id,x,base,larg,alt,neve){
+  const m = rg(id,`M${n2(x-larg)} ${n2(base)} L${n2(x-larg*0.18)} ${n2(base-alt*0.92)} C${n2(x)} ${n2(base-alt*1.06)} ${n2(x)} ${n2(base-alt*1.06)} ${n2(x+larg*0.2)} ${n2(base-alt*0.9)} L${n2(x+larg)} ${n2(base)} Z`);
+  const c = neve ? rg(id+'-neve',`M${n2(x-larg*0.34)} ${n2(base-alt*0.62)} C${n2(x-larg*0.2)} ${n2(base-alt*0.56)} ${n2(x-larg*0.1)} ${n2(base-alt*0.7)} ${n2(x-larg*0.18)} ${n2(base-alt*0.92)} C${n2(x)} ${n2(base-alt*1.06)} ${n2(x)} ${n2(base-alt*1.06)} ${n2(x+larg*0.2)} ${n2(base-alt*0.9)} C${n2(x+larg*0.14)} ${n2(base-alt*0.7)} ${n2(x+larg*0.24)} ${n2(base-alt*0.6)} ${n2(x+larg*0.34)} ${n2(base-alt*0.64)} C${n2(x+larg*0.1)} ${n2(base-alt*0.52)} ${n2(x-larg*0.12)} ${n2(base-alt*0.52)} ${n2(x-larg*0.34)} ${n2(base-alt*0.62)} Z`) : '';
+  return m+c;
+}
+function ovelha(x,chao,e,id,esq){
+  const s=e, L=esq===false?-1:1;
+  const P=(px,py)=>`${n2(x+px*s*L)} ${n2(chao+py*s)}`;
+  return rg(id+'-pernas',`M${P(-16,-16)} L${P(-16,0)} L${P(-8,0)} L${P(-8,-16)} Z M${P(10,-16)} L${P(10,0)} L${P(18,0)} L${P(18,-16)} Z`)
+   + rg(id+'-la', blobD(x, chao-40*s, 28*s, 8, 1.18))
+   + elip(id+'-cabeca', x-34*s*L, chao-46*s, 14*s, 11*s)
+   + elip(id+'-orelha', x-28*s*L, chao-57*s, 8*s, 5*s)
+   + pt(x-40*s*L, chao-48*s, 3*s);
+}
+function arca(x, chao, e, id){
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(chao+py*e)}`;
+  return rg(id+'-casco',`M${P(-150,-60)} C${P(-142,-18)} ${P(-112,0)} ${P(0,0)} C${P(112,0)} ${P(142,-18)} ${P(150,-60)} Z`)
+   + rg(id+'-conves',`M${P(-150,-74)} L${P(150,-74)} L${P(150,-60)} L${P(-150,-60)} Z`)
+   + rg(id+'-casa',`M${P(-96,-74)} L${P(-96,-134)} L${P(96,-134)} L${P(96,-74)} Z`)
+   + rg(id+'-telhado',`M${P(-116,-134)} L${P(0,-180)} L${P(116,-134)} Z`)
+   + rg(id+'-porta',`M${P(-26,-74)} L${P(-26,-114)} C${P(-26,-128)} ${P(26,-128)} ${P(26,-114)} L${P(26,-74)} Z`)
+   + rg(id+'-janelas',`M${P(-74,-120)} L${P(-74,-92)} L${P(-46,-92)} L${P(-46,-120)} Z M${P(46,-120)} L${P(46,-92)} L${P(74,-92)} L${P(74,-120)} Z`)
+   + det(`M${P(-140,-42)} C${P(-80,-24)} ${P(80,-24)} ${P(140,-42)}`)
+   + det(`M${P(-146,-52)} C${P(-84,-36)} ${P(84,-36)} ${P(146,-52)}`);
+}
+function palmeira(x, base, e, id){
+  const tx=x+8*e, ty=base-118*e;
+  const tronco = rg(id+'-tronco',
+    `M${n2(x-11*e)} ${n2(base)} C${n2(x-6*e)} ${n2(base-56*e)} ${n2(x)} ${n2(base-92*e)} ${n2(tx-8*e)} ${n2(ty)}`
+  + ` L${n2(tx+7*e)} ${n2(ty+6*e)} C${n2(x+12*e)} ${n2(base-90*e)} ${n2(x+8*e)} ${n2(base-54*e)} ${n2(x+13*e)} ${n2(base)} Z`);
+  let folhas='';
+  [152,198,248,296,342].forEach((a,i)=>{
+    folhas += `<path class="rg" id="${id}-fo${i}" transform="rotate(${a} ${n2(tx)} ${n2(ty)})" d="M${n2(tx)} ${n2(ty)} C${n2(tx+22*e)} ${n2(ty-18*e)} ${n2(tx+54*e)} ${n2(ty-15*e)} ${n2(tx+74*e)} ${n2(ty-2*e)} C${n2(tx+52*e)} ${n2(ty+13*e)} ${n2(tx+22*e)} ${n2(ty+11*e)} ${n2(tx)} ${n2(ty+3*e)} Z"/>`;
+  });
+  return tronco + folhas + circ(id+'-coco1', tx-9*e, ty+11*e, 7*e) + circ(id+'-coco2', tx+7*e, ty+13*e, 7*e);
+}
+function arcoIris(id, cx, cy, rInt, larg){
+  let out='';
+  for(let i=6;i>=0;i--){
+    const r1=rInt+i*larg, r2=r1+larg;
+    out += rg(id+'-f'+i,`M${n2(cx-r2)} ${n2(cy)} A${n2(r2)} ${n2(r2)} 0 0 1 ${n2(cx+r2)} ${n2(cy)}`
+      +` L${n2(cx+r1)} ${n2(cy)} A${n2(r1)} ${n2(r1)} 0 0 0 ${n2(cx-r1)} ${n2(cy)} Z`);
+  }
+  return out;
+}
+const chuva = (x,y,n,esp,alt) => {
+  let o=''; for(let i=0;i<n;i++) o+=det(`M${n2(x+i*esp)} ${y} L${n2(x+i*esp-7)} ${n2(y+alt)}`);
+  return o;
+};
+function junco(x, base, e, id, i){
+  return rg(id+'-h'+i,`M${n2(x-4*e)} ${n2(base)} C${n2(x-3*e)} ${n2(base-40*e)} ${n2(x-2*e)} ${n2(base-64*e)} ${n2(x)} ${n2(base-78*e)} C${n2(x+2*e)} ${n2(base-64*e)} ${n2(x+3*e)} ${n2(base-40*e)} ${n2(x+4*e)} ${n2(base)} Z`)
+   + elip(id+'-t'+i, x, base-90*e, 6*e, 15*e);
+}
+function cesto(x, y, e, id){
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(y+py*e)}`;
+  return rg(id+'-corpo',`M${P(-38,-8)} C${P(-38,18)} ${P(-26,30)} ${P(0,30)} C${P(26,30)} ${P(38,18)} ${P(38,-8)} Z`)
+   + rg(id+'-borda',`M${P(-44,-20)} L${P(44,-20)} L${P(44,-6)} L${P(-44,-6)} Z`)
+   + det(`M${P(-30,4)} C${P(-10,10)} ${P(10,10)} ${P(30,4)}`)
+   + det(`M${P(-24,16)} C${P(-8,21)} ${P(8,21)} ${P(24,16)}`);
+}
+function chama(x, base, e, id, i){
+  return rg(id+'-ch'+i,`M${n2(x)} ${n2(base)} C${n2(x-16*e)} ${n2(base-12*e)} ${n2(x-18*e)} ${n2(base-34*e)} ${n2(x-3*e)} ${n2(base-54*e)}`
+   +` C${n2(x+4*e)} ${n2(base-40*e)} ${n2(x+10*e)} ${n2(base-40*e)} ${n2(x+9*e)} ${n2(base-50*e)}`
+   +` C${n2(x+20*e)} ${n2(base-34*e)} ${n2(x+17*e)} ${n2(base-12*e)} ${n2(x)} ${n2(base)} Z`);
+}
+function feixe(x, base, e, id, ang){
+  const g = ang ? ` transform="rotate(${ang} ${n2(x)} ${n2(base)})"` : '';
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(base+py*e)}`;
+  return `<g${g}>`
+   + rg(id+'-molho',`M${P(-27,0)} C${P(-15,-38)} ${P(-11,-50)} ${P(-9,-58)} C${P(-21,-74)} ${P(-27,-90)} ${P(-30,-108)}`
+     +` C${P(-10,-99)} ${P(10,-99)} ${P(30,-108)} C${P(27,-90)} ${P(21,-74)} ${P(9,-58)}`
+     +` C${P(11,-50)} ${P(15,-38)} ${P(27,0)} Z`)
+   + rg(id+'-laco',`M${P(-13,-64)} L${P(13,-64)} L${P(12,-48)} L${P(-12,-48)} Z`)
+   + det(`M${P(-16,-78)} C${P(-13,-90)} ${P(-13,-98)} ${P(-15,-104)}`)
+   + det(`M${P(0,-80)} L${P(0,-101)}`)
+   + det(`M${P(16,-78)} C${P(13,-90)} ${P(13,-98)} ${P(15,-104)}`)
+   + `</g>`;
+}
+function piramide(id,x,base,larg,alt){
+  return rg(id,`M${n2(x-larg)} ${n2(base)} L${n2(x)} ${n2(base-alt)} L${n2(x+larg)} ${n2(base)} Z`)
+   + det(`M${n2(x)} ${n2(base-alt)} L${n2(x)} ${n2(base)}`);
+}
+function barco(x, chao, e, id){
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(chao+py*e)}`;
+  return rg(id+'-casco',`M${P(-86,-34)} C${P(-78,4)} ${P(-48,18)} ${P(0,18)} C${P(48,18)} ${P(78,4)} ${P(86,-34)} Z`)
+   + barra(id+'-mastro', x+2*e, chao-34*e, x+2*e, chao-140*e, 9*e)
+   + rg(id+'-vela',`M${P(10,-44)} C${P(48,-92)} ${P(62,-128)} ${P(64,-136)} L${P(10,-136)} Z`)
+   + rg(id+'-vela2',`M${P(-6,-44)} C${P(-40,-84)} ${P(-52,-116)} ${P(-54,-124)} L${P(-6,-124)} Z`)
+   + det(`M${P(-76,-16)} C${P(-40,-2)} ${P(40,-2)} ${P(76,-16)}`);
+}
+function pao(id,x,y,e){
+  return rg(id,`M${n2(x-24*e)} ${n2(y+9*e)} C${n2(x-24*e)} ${n2(y-15*e)} ${n2(x-13*e)} ${n2(y-24*e)} ${n2(x)} ${n2(y-24*e)}`
+   +` C${n2(x+13*e)} ${n2(y-24*e)} ${n2(x+24*e)} ${n2(y-15*e)} ${n2(x+24*e)} ${n2(y+9*e)} Z`)
+   + det(`M${n2(x-12*e)} ${n2(y-14*e)} L${n2(x-5*e)} ${n2(y-20*e)}`)
+   + det(`M${n2(x+3*e)} ${n2(y-16*e)} L${n2(x+10*e)} ${n2(y-21*e)}`);
+}
+function cesta(x, y, e, id){
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(y+py*e)}`;
+  return rg(id+'-corpo',`M${P(-34,-6)} C${P(-34,20)} ${P(-22,32)} ${P(0,32)} C${P(22,32)} ${P(34,20)} ${P(34,-6)} Z`)
+   + rg(id+'-borda',`M${P(-40,-18)} L${P(40,-18)} L${P(40,-4)} L${P(-40,-4)} Z`)
+   + det(`M${P(-26,8)} C${P(-8,14)} ${P(8,14)} ${P(26,8)}`);
+}
+function harpa(x, base, e, id){
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(base+py*e)}`;
+  return barra(id+'-pilar', x-18*e, base, x-18*e, base-102*e, 13*e)
+   + rg(id+'-braco',`M${P(-25,-100)} C${P(-6,-128)} ${P(26,-122)} ${P(42,-96)} L${P(30,-88)} C${P(18,-108)} ${P(-4,-112)} ${P(-18,-92)} Z`)
+   + barra(id+'-caixa', x+36*e, base-92*e, x+12*e, base, 21*e)
+   + det(`M${P(-14,-88)} L${P(14,-66)}`) + det(`M${P(-14,-70)} L${P(20,-44)}`)
+   + det(`M${P(-14,-52)} L${P(25,-22)}`) + det(`M${P(-14,-34)} L${P(30,0)}`);
+}
+function cajado(x, base, e, id){
+  const P=(px,py)=>`${n2(x+px*e)} ${n2(base+py*e)}`;
+  return rg(id,`M${P(-5,0)} L${P(-5,-96)} C${P(-5,-116)} ${P(24,-116)} ${P(24,-98)} L${P(14,-98)} C${P(14,-106)} ${P(5,-106)} ${P(5,-96)} L${P(5,0)} Z`);
+}
+function lanca(x, base, e, id){
+  return barra(id+'-haste', x, base, x, base-150*e, 8*e)
+   + rg(id+'-ponta',`M${n2(x-13*e)} ${n2(base-150*e)} L${n2(x)} ${n2(base-186*e)} L${n2(x+13*e)} ${n2(base-150*e)} Z`);
+}
+function coroa(id,x,y,e){
+  return rg(id,`M${n2(x-24*e)} ${n2(y)} L${n2(x-24*e)} ${n2(y-20*e)} L${n2(x-12*e)} ${n2(y-8*e)} L${n2(x)} ${n2(y-26*e)}`
+   +` L${n2(x+12*e)} ${n2(y-8*e)} L${n2(x+24*e)} ${n2(y-20*e)} L${n2(x+24*e)} ${n2(y)} Z`);
+}
+function capacete(id,x,cy,r){
+  return rg(id,`M${n2(x-r*1.06)} ${n2(cy+r*0.2)} C${n2(x-r*1.06)} ${n2(cy-r*1.1)} ${n2(x+r*1.06)} ${n2(cy-r*1.1)} ${n2(x+r*1.06)} ${n2(cy+r*0.2)}`
+   +` C${n2(x+r*0.5)} ${n2(cy-r*0.3)} ${n2(x-r*0.5)} ${n2(cy-r*0.3)} ${n2(x-r*1.06)} ${n2(cy+r*0.2)} Z`);
+}
+function pote(id,x,base,e){
+  return rg(id,`M${n2(x-22*e)} ${n2(base-34*e)} C${n2(x-30*e)} ${n2(base-14*e)} ${n2(x-20*e)} ${n2(base)} ${n2(x)} ${n2(base)}`
+   +` C${n2(x+20*e)} ${n2(base)} ${n2(x+30*e)} ${n2(base-14*e)} ${n2(x+22*e)} ${n2(base-34*e)} Z`);
+}
+
+/* =========================================================
+   HISTÓRIA · A ARCA DE NOÉ
+   ========================================================= */
+const N1 = svgWrap(`
+  <rect class="rg" id="n1-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(344,54,26,'n1-sol')}
+  ${nuvem(16,32,0.8,'n1-n1')}
+  ${ave(112,110,0.5,'n1-ave')}
+  ${rg('n1-morro','M0 250 C70 198 168 208 236 244 C292 274 352 240 400 248 L400 520 L0 520 Z')}
+  ${rg('n1-chao','M0 296 C120 280 280 280 400 292 L400 520 L0 520 Z')}
+  ${arvore(54,338,0.62,'n1-arv')}
+  ${arca(214,470,0.68,'n1-arca')}
+  ${pessoa(70,486,0.92,'n1-noe','curto',{barba:true,bracos:'cima'})}
+  ${rg('n1-tora1','M14 512 C14 502 74 502 74 512 C74 520 14 520 14 512 Z')}
+  ${rg('n1-tora2','M96 500 C96 491 148 491 148 500 C148 508 96 508 96 500 Z')}
+  ${grama(378,514,0.8)}
+`,'n1');
+
+const N2 = svgWrap(`
+  <rect class="rg" id="n2-ceu" x="0" y="0" width="400" height="520"/>
+  ${nuvem(22,28,0.85,'n2-n1')}
+  ${nuvem(238,50,0.7,'n2-n2')}
+  ${ave(150,110,0.5,'n2-ave1')}
+  ${ave(300,140,0.42,'n2-ave2')}
+  ${rg('n2-chao','M0 296 C120 280 280 280 400 292 L400 520 L0 520 Z')}
+  ${arca(292,410,0.56,'n2-arca')}
+  ${elefante(76,462,0.5,'n2-ele')}
+  ${leao(168,470,0.5,'n2-leao')}
+  ${ovelha(240,478,0.62,'n2-ov')}
+  ${coelho(126,508,0.5,'n2-coelho')}
+  ${ovelha(48,510,0.5,'n2-ov2')}
+  ${grama(342,514,0.7)}
+`,'n2');
+
+const N3 = svgWrap(`
+  <rect class="rg" id="n3-ceu" x="0" y="0" width="400" height="520"/>
+  ${nuvem(4,20,1.35,'n3-n1')}
+  ${nuvem(206,10,1.5,'n3-n2')}
+  ${nuvem(96,86,1.1,'n3-n3')}
+  ${chuva(24,140,11,34,44)}
+  ${chuva(40,204,10,34,44)}
+  ${rg('n3-a1', ondaD(330,520))}
+  ${rg('n3-a2', ondaD(396,520))}
+  ${rg('n3-a3', ondaD(462,520))}
+  ${arca(196,352,0.6,'n3-arca')}
+  ${det(linhaOnda(364))}${det(linhaOnda(430))}${det(linhaOnda(496))}
+`,'n3');
+
+const N4 = svgWrap(`
+  <rect class="rg" id="n4-ceu" x="0" y="0" width="400" height="520"/>
+  ${arcoIris('n4-arco',200,330,120,17)}
+  ${solD(46,52,24,'n4-sol')}
+  ${nuvem(268,34,0.7,'n4-n1')}
+  ${rg('n4-monte','M0 358 C70 300 170 312 240 350 C296 380 352 350 400 358 L400 520 L0 520 Z')}
+  ${arca(206,468,0.5,'n4-arca')}
+  ${ave(92,196,0.74,'n4-pomba')}
+  ${rg('n4-ramo','M134 190 C150 182 168 184 180 192 C166 200 148 200 134 190 Z')}
+  ${pessoa(58,506,0.72,'n4-noe','curto',{barba:true,bracos:'cima'})}
+  ${grama(340,514,0.8)}
+`,'n4');
+
+/* =========================================================
+   HISTÓRIA · JOSÉ
+   ========================================================= */
+const J1 = svgWrap(`
+  <rect class="rg" id="j1-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(348,50,25,'j1-sol')}
+  ${nuvem(18,30,0.8,'j1-n1')}
+  ${ave(120,104,0.5,'j1-ave')}
+  ${rg('j1-morro','M0 246 C74 194 170 204 238 240 C292 268 352 236 400 244 L400 520 L0 520 Z')}
+  ${rg('j1-chao','M0 292 C120 276 280 276 400 288 L400 520 L0 520 Z')}
+  ${arvore(348,348,0.62,'j1-arv')}
+  ${pessoa(150,486,1.16,'j1-jose','curto',{listras:true,bracos:'aberto'})}
+  ${pessoa(266,492,1.0,'j1-jaco','curto',{barba:true})}
+  ${ovelha(52,498,0.72,'j1-ov1')}
+  ${ovelha(340,510,0.6,'j1-ov2')}
+  ${grama(24,514,0.8)}
+`,'j1');
+
+const J2 = svgWrap(`
+  <rect class="rg" id="j2-ceu" x="0" y="0" width="400" height="520"/>
+  ${lua('j2-lua',312,70,30)}
+  ${solD(74,74,24,'j2-sol')}
+  ${estrela('j2-e1',186,44,17)}
+  ${estrela('j2-e2',252,120,13)}
+  ${estrela('j2-e3',134,132,11)}
+  ${estrela('j2-e4',352,150,12)}
+  ${rg('j2-chao','M0 300 C120 284 280 284 400 296 L400 520 L0 520 Z')}
+  ${feixe(200,432,1.15,'j2-fx0')}
+  ${feixe(66,470,0.86,'j2-fx1',26)}
+  ${feixe(146,494,0.8,'j2-fx2',18)}
+  ${feixe(268,494,0.8,'j2-fx3',-18)}
+  ${feixe(348,470,0.86,'j2-fx4',-26)}
+  ${grama(22,514,0.7)}${grama(380,512,0.7)}
+`,'j2');
+
+const J3 = svgWrap(`
+  <rect class="rg" id="j3-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(58,54,26,'j3-sol')}
+  ${nuvem(238,30,0.75,'j3-n1')}
+  ${rg('j3-areia','M0 300 C120 286 280 286 400 298 L400 520 L0 520 Z')}
+  ${piramide('j3-pir1',312,306,88,124)}
+  ${piramide('j3-pir2',196,306,58,80)}
+  ${palmeira(56,392,0.72,'j3-palm')}
+  ${pessoa(190,494,1.2,'j3-jose','curto',{coroa:true,bracos:'aberto'})}
+  ${pote('j3-pote',352,508,0.9)}${pessoa(300,502,0.86,'j3-servo','curto',{barba:true})}
+  ${grama(120,514,0.7)}
+`,'j3');
+
+const J4 = svgWrap(`
+  <rect class="rg" id="j4-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(346,52,24,'j4-sol')}
+  ${nuvem(20,34,0.75,'j4-n1')}
+  ${ave(258,96,0.44,'j4-ave')}
+  ${rg('j4-chao','M0 296 C120 280 280 280 400 292 L400 520 L0 520 Z')}
+  ${palmeira(348,368,0.6,'j4-palm')}
+  ${pessoa(96,496,1.0,'j4-irmao','curto',{barba:true})}
+  ${pessoa(206,486,1.14,'j4-jose','curto',{bracos:'aberto'})}
+  ${pessoa(316,498,1.0,'j4-irmao2','curto',{barba:true})}
+  ${cesta(46,472,0.72,'j4-cesta')}
+  ${grama(24,514,0.7)}
+`,'j4');
+
+/* =========================================================
+   HISTÓRIA · MOISÉS
+   ========================================================= */
+const M1 = svgWrap(`
+  <rect class="rg" id="m1-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(340,52,25,'m1-sol')}
+  ${nuvem(18,30,0.8,'m1-n1')}
+  ${ave(140,96,0.46,'m1-ave')}
+  ${palmeira(56,258,0.62,'m1-palm')}
+  ${rg('m1-a1', ondaD(300,520))}
+  ${rg('m1-a2', ondaD(372,520))}
+  ${rg('m1-a3', ondaD(448,520))}
+  ${junco(30,344,1.05,'m1-j',1)}${junco(64,352,0.85,'m1-j',2)}${junco(96,358,0.7,'m1-j',3)}
+  ${junco(348,346,1.0,'m1-j',4)}${junco(378,354,0.82,'m1-j',5)}
+  ${rg('m1-cesto','M152 318 C152 356 168 374 200 374 C232 374 248 356 248 318 Z')}
+  ${circ('m1-bebe',200,296,25)}
+  ${rg('m1-borda','M144 302 L256 302 L256 320 L144 320 Z')}
+  ${pt(191,290,3.4)}${pt(209,290,3.4)}
+  ${det('M191 302 C195 308 205 308 209 302')}
+  ${det('M164 340 C182 348 218 348 236 340')}
+  ${det('M170 358 C186 364 214 364 230 358')}
+  ${det(linhaOnda(410))}${det(linhaOnda(486))}
+`,'m1');
+
+const M2 = svgWrap(`
+  <rect class="rg" id="m2-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(52,50,24,'m2-sol')}
+  ${nuvem(240,28,0.75,'m2-n1')}
+  ${montanha('m2-monte',252,318,150,196,false)}
+  ${rg('m2-chao','M0 318 C120 302 280 302 400 314 L400 520 L0 520 Z')}
+  ${rg('m2-arbusto','M196 484 C196 448 224 424 272 424 C320 424 348 448 348 484 Z')}
+  ${chama(224,432,1.2,'m2-f',1)}${chama(258,426,1.5,'m2-f',2)}${chama(292,428,1.35,'m2-f',3)}${chama(322,436,1.1,'m2-f',4)}${chama(276,398,1.0,'m2-f',5)}
+  ${pessoa(96,492,1.06,'m2-moises','curto',{barba:true,bracos:'cima'})}
+  ${ovelha(46,510,0.56,'m2-ov')}
+  ${grama(198,514,0.7)}
+`,'m2');
+
+const M3 = svgWrap(`
+  <rect class="rg" id="m3-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(200,46,22,'m3-sol')}
+  ${piramide('m3-pir',330,286,74,104)}
+  ${rg('m3-chao','M0 286 C120 272 280 272 400 284 L400 520 L0 520 Z')}
+  ${barra('m3-col1',46,470,46,300,26)}
+  ${rg('m3-cap1','M28 300 L64 300 L64 284 L28 284 Z')}
+  ${barra('m3-col2',354,470,354,300,26)}
+  ${rg('m3-cap2','M336 300 L372 300 L372 284 L336 284 Z')}
+  ${pessoa(140,486,1.14,'m3-moises','curto',{barba:true,bracos:'um'})}
+  ${cajado(196,492,0.86,'m3-cajado')}
+  ${pessoa(272,492,1.06,'m3-farao','curto',{coroa:true})}
+  ${grama(320,512,0.6)}
+`,'m3');
+
+const M4 = svgWrap(`
+  <rect class="rg" id="m4-ceu" x="0" y="0" width="400" height="520"/>
+  ${nuvem(150,20,0.85,'m4-n1')}
+  ${solD(48,48,22,'m4-sol')}
+  ${rg('m4-parede1','M0 520 L0 168 C22 196 12 232 30 262 C48 292 34 330 44 366 C54 402 40 448 52 520 Z')}
+  ${rg('m4-parede2','M400 520 L400 168 C378 196 388 232 370 262 C352 292 366 330 356 366 C346 402 360 448 348 520 Z')}
+  ${det('M18 232 C34 256 24 290 34 318')}${det('M14 356 C30 380 20 414 30 446')}${peixe(30,300,0.3,'m4-px1')}${peixe(26,420,0.26,'m4-px2')}
+  ${det('M382 232 C366 256 376 290 366 318')}${det('M386 356 C370 380 380 414 370 446')}${peixe(372,300,0.3,'m4-px3')}
+  ${rg('m4-chao','M44 400 C140 384 260 384 356 398 L356 520 L44 520 Z')}
+  ${pessoa(146,494,1.0,'m4-p1','curto',{barba:true,bracos:'um'})}
+  ${pessoa(230,500,0.9,'m4-p2','longo')}
+  ${pessoa(292,506,0.62,'m4-p3','curto')}
+  ${cajado(190,498,0.82,'m4-cajado')}
+`,'m4');
+
+/* =========================================================
+   HISTÓRIA · DAVI
+   ========================================================= */
+const D1 = svgWrap(`
+  <rect class="rg" id="d1-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(346,50,25,'d1-sol')}
+  ${nuvem(16,30,0.8,'d1-n1')}
+  ${ave(122,102,0.5,'d1-ave1')}${ave(250,74,0.4,'d1-ave2')}
+  ${rg('d1-morro','M0 246 C74 194 170 204 238 240 C292 268 352 236 400 244 L400 520 L0 520 Z')}
+  ${rg('d1-chao','M0 292 C120 276 280 276 400 288 L400 520 L0 520 Z')}
+  ${arvore(46,340,0.6,'d1-arv')}
+  ${pessoa(158,478,0.98,'d1-davi','curto')}
+  ${cajado(212,484,0.84,'d1-cajado')}
+  ${ovelha(302,478,0.72,'d1-ov1')}
+  ${ovelha(78,506,0.62,'d1-ov2')}
+  ${ovelha(236,512,0.54,'d1-ov3')}
+  ${grama(368,514,0.75)}
+`,'d1');
+
+const D2 = svgWrap(`
+  <rect class="rg" id="d2-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(52,52,24,'d2-sol')}
+  ${nuvem(236,28,0.78,'d2-n1')}
+  ${rg('d2-morro','M0 252 C74 202 170 212 238 246 C292 272 352 242 400 250 L400 520 L0 520 Z')}
+  ${rg('d2-chao','M0 300 C120 284 280 284 400 296 L400 520 L0 520 Z')}
+  ${arvore(352,352,0.58,'d2-arv')}
+  ${pessoa(238,494,1.14,'d2-samuel','curto',{barba:true,bracos:'um'})}
+  ${pote('d2-frasco',192,344,0.86)}
+  ${rg('d2-oleo','M184 344 C170 366 152 382 132 390 C136 398 142 402 148 402 C166 392 180 372 192 348 Z')}
+  ${pessoa(126,500,0.86,'d2-davi','curto')}
+  ${ovelha(46,510,0.54,'d2-ov')}
+  ${grama(316,514,0.7)}
+`,'d2');
+
+const D3 = svgWrap(`
+  <rect class="rg" id="d3-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(198,44,22,'d3-sol')}
+  ${nuvem(22,34,0.72,'d3-n1')}
+  ${rg('d3-morro','M0 262 C74 214 170 224 238 256 C292 282 352 252 400 260 L400 520 L0 520 Z')}
+  ${rg('d3-chao','M0 306 C120 290 280 290 400 302 L400 520 L0 520 Z')}
+  ${lanca(356,498,0.86,'d3-lanca')}
+  ${pessoa(300,500,1.5,'d3-golias','curto',{barba:true,capacete:true})}
+  ${pessoa(94,502,0.86,'d3-davi','curto',{bracos:'cima'})}
+  ${rg('d3-funda','M74 400 C58 386 60 366 76 358 C70 372 72 386 86 394 Z')}
+  ${circ('d3-pedra1',36,506,11)}${circ('d3-pedra2',60,512,8)}
+  ${grama(170,514,0.7)}
+`,'d3');
+
+const D4 = svgWrap(`
+  <rect class="rg" id="d4-ceu" x="0" y="0" width="400" height="520"/>
+  ${lua('d4-lua',66,64,28)}
+  ${estrela('d4-e1',180,54,15)}${estrela('d4-e2',288,102,12)}
+  ${estrela('d4-e3',348,44,11)}${estrela('d4-e4',134,132,10)}
+  ${rg('d4-morro','M0 268 C74 220 170 230 238 262 C292 288 352 258 400 266 L400 520 L0 520 Z')}
+  ${rg('d4-chao','M0 312 C120 296 280 296 400 308 L400 520 L0 520 Z')}
+  ${arvore(50,362,0.6,'d4-arv')}
+  ${pessoa(176,490,1.1,'d4-davi','curto',{bracos:'aberto'})}
+  ${harpa(250,486,1.25,'d4-harpa')}
+  ${ovelha(330,494,0.66,'d4-ov1')}
+  ${ovelha(88,510,0.54,'d4-ov2')}
+  ${grama(376,514,0.7)}
+`,'d4');
+
+/* =========================================================
+   HISTÓRIA · JESUS E AS CRIANÇAS
+   ========================================================= */
+const S1 = svgWrap(`
+  <rect class="rg" id="s1-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(344,52,25,'s1-sol')}
+  ${nuvem(18,32,0.8,'s1-n1')}
+  ${ave(128,106,0.48,'s1-ave')}
+  ${rg('s1-morro','M0 250 C74 198 170 208 238 244 C292 272 352 240 400 248 L400 520 L0 520 Z')}
+  ${rg('s1-chao','M0 296 C120 280 280 280 400 292 L400 520 L0 520 Z')}
+  ${arvore(354,352,0.58,'s1-arv')}
+  ${pessoa(140,482,1.14,'s1-jesus','longo',{barba:true,bracos:'um'})}
+  ${cajado(200,488,0.86,'s1-cajado')}
+  ${ovelha(60,500,0.68,'s1-ov1')}
+  ${ovelha(268,506,0.6,'s1-ov2')}
+  ${ovelha(330,514,0.5,'s1-ov3')}
+  ${grama(22,514,0.7)}
+`,'s1');
+
+const S2 = svgWrap(`
+  <rect class="rg" id="s2-ceu" x="0" y="0" width="400" height="520"/>
+  ${nuvem(10,18,1.2,'s2-n1')}
+  ${nuvem(224,26,1.15,'s2-n2')}
+  ${chuva(60,120,8,32,36)}
+  ${rg('s2-a1', ondaD(346,520))}
+  ${rg('s2-a2', ondaD(414,520))}
+  ${rg('s2-a3', ondaD(478,520))}
+  ${barco(196,376,0.92,'s2-barco')}${pessoa(152,372,0.5,'s2-d1','curto',{barba:true,bracos:'cima'})}${pessoa(238,374,0.46,'s2-d2','curto',{bracos:'cima'})}
+  ${det(linhaOnda(444))}${det(linhaOnda(500))}
+`,'s2');
+
+const S3 = svgWrap(`
+  <rect class="rg" id="s3-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(346,50,24,'s3-sol')}
+  ${nuvem(18,30,0.78,'s3-n1')}
+  ${ave(132,100,0.46,'s3-ave')}
+  ${rg('s3-morro','M0 254 C74 202 170 212 238 248 C292 276 352 244 400 252 L400 520 L0 520 Z')}
+  ${rg('s3-chao','M0 300 C120 284 280 284 400 296 L400 520 L0 520 Z')}
+  ${arvore(46,348,0.58,'s3-arv')}
+  ${pessoa(258,486,1.16,'s3-jesus','longo',{barba:true,bracos:'aberto'})}
+  ${pessoa(140,498,0.7,'s3-menino','curto',{bracos:'cima'})}
+  ${cesta(140,428,0.72,'s3-cesta')}
+  ${pao('s3-pao1',54,486,0.9)}${pao('s3-pao2',96,498,0.8)}
+  ${peixe(332,504,0.34,'s3-peixe')}
+  ${grama(200,514,0.65)}
+`,'s3');
+
+const S4 = svgWrap(`
+  <rect class="rg" id="s4-ceu" x="0" y="0" width="400" height="520"/>
+  ${solD(344,50,25,'s4-sol')}
+  ${nuvem(18,30,0.78,'s4-n1')}
+  ${ave(246,92,0.44,'s4-ave')}
+  ${rg('s4-morro','M0 250 C74 198 170 208 238 244 C292 272 352 240 400 248 L400 520 L0 520 Z')}
+  ${rg('s4-chao','M0 296 C120 280 280 280 400 292 L400 520 L0 520 Z')}
+  ${arvore(44,346,0.58,'s4-arv')}
+  ${pessoa(206,480,1.2,'s4-jesus','longo',{barba:true,bracos:'aberto'})}
+  ${pessoa(102,504,0.66,'s4-c1','curto',{bracos:'cima'})}
+  ${pessoa(300,506,0.62,'s4-c2','longo',{bracos:'cima'})}
+  ${pessoa(352,512,0.54,'s4-c3','curto')}
+  ${grama(150,514,0.65)}
+`,'s4');
+
 /* =========================================================
    CONTEÚDO — histórias
    ========================================================= */
 const HISTORIAS = [
   {
-    id:'criacao', titulo:'A Criação', ref:'Gênesis 1:1–31', capa:'c1',
+    id:'criacao', titulo:'A Criação', ref:'Gênesis 1:1–31',
     resumo:'No princípio, Deus criou o céu e a terra. Tudo era escuro e vazio. Então Deus falou: "Haja luz!" — e a luz apareceu. Dia após dia, Ele foi enchendo o mundo de coisas boas: separou as águas e fez o céu; juntou o mar e fez a terra seca aparecer, coberta de plantas e de árvores cheias de frutos. Pôs o sol, a lua e as estrelas lá no alto. Encheu o mar de peixes e o céu de aves. Fez os animais que andam pela terra. E, por último, criou o ser humano — homem e mulher — parecidos com Ele, para cuidar de tudo o que Ele havia feito. Deus olhou para tudo e viu que era muito bom.',
     versiculo:'No princípio, Deus criou os céus e a terra.', versRef:'Gênesis 1:1',
     cenas:[
-      { id:'c1', titulo:'O céu e as águas',      ref:'Gênesis 1:6–8',   svg:CENA1 },
-      { id:'c2', titulo:'A terra e as plantas',  ref:'Gênesis 1:11–12', svg:CENA2 },
-      { id:'c3', titulo:'Os peixes e as aves',   ref:'Gênesis 1:20–22', svg:CENA3 },
+      { id:'c1', titulo:'O céu e as águas',        ref:'Gênesis 1:6–8',   svg:CENA1 },
+      { id:'c2', titulo:'A terra e as plantas',    ref:'Gênesis 1:11–12', svg:CENA2 },
+      { id:'c3', titulo:'Os peixes e as aves',     ref:'Gênesis 1:20–22', svg:CENA3 },
       { id:'c4', titulo:'Os animais e as pessoas', ref:'Gênesis 1:24–27', svg:CENA4 }
     ]
   },
-  { id:'noe',    titulo:'A Arca de Noé', ref:'Gênesis 6–9',    capa:null, emBreve:true },
-  { id:'jose',   titulo:'José do Egito', ref:'Gênesis 37–45',  capa:null, emBreve:true },
-  { id:'moises', titulo:'Moisés',        ref:'Êxodo 2–14',     capa:null, emBreve:true }
+  {
+    id:'noe', titulo:'A Arca de Noé', ref:'Gênesis 6–9',
+    resumo:'Fazia muito tempo que as pessoas tinham esquecido de Deus e só faziam o que era mau. Mas havia um homem chamado Noé que amava a Deus e obedecia a Ele. Então Deus disse: "Noé, construa um barco bem grande, uma arca, porque vou mandar uma chuva enorme sobre a terra." Noé obedeceu. Trabalhou muitos e muitos dias, até a arca ficar pronta. Depois Deus mandou entrar a família de Noé e os animais, dois a dois, de cada espécie. Quando todos estavam lá dentro, Deus fechou a porta. Choveu quarenta dias e quarenta noites, e a arca flutuou sobre as águas — e Deus cuidou de cada um que estava dentro dela. Quando a água baixou, Noé soltou uma pomba, que voltou com uma folhinha verde no bico: a terra estava seca outra vez! Então Deus pôs um arco-íris no céu e fez uma promessa que vale até hoje.',
+    versiculo:'Ponho o meu arco nas nuvens: ele será o sinal da aliança entre mim e a terra.', versRef:'Gênesis 9:13',
+    cenas:[
+      { id:'n1', titulo:'Noé constrói a arca',      ref:'Gênesis 6:13–22', svg:N1 },
+      { id:'n2', titulo:'Os animais entram',        ref:'Gênesis 7:1–9',   svg:N2 },
+      { id:'n3', titulo:'A chuva e as águas',       ref:'Gênesis 7:17–24', svg:N3 },
+      { id:'n4', titulo:'O arco-íris da promessa',  ref:'Gênesis 9:12–17', svg:N4 }
+    ]
+  },
+  {
+    id:'jose', titulo:'José do Egito', ref:'Gênesis 37–45',
+    resumo:'Jacó tinha doze filhos, e José era um dos mais novos. O pai gostava tanto dele que lhe deu uma túnica linda, cheia de cores — e os irmãos ficaram com ciúme. José ainda teve dois sonhos: viu feixes de trigo, e depois o sol, a lua e as estrelas, todos se curvando diante dele. Os irmãos ficaram mais bravos ainda e venderam José para mercadores que iam para o Egito. Mas Deus estava com José. Mesmo tão longe de casa, ele foi fiel e sábio, e o rei do Egito o pôs para governar o país inteiro. Anos depois veio uma fome muito grande, e os irmãos foram ao Egito procurar comida — sem saber que quem mandava ali era ele! José poderia ter se vingado, mas escolheu perdoar. Chorou, abraçou os irmãos e disse: vocês pensaram em fazer o mal, mas Deus transformou tudo em bem.',
+    versiculo:'Vocês planejaram o mal contra mim, mas Deus o tornou em bem.', versRef:'Gênesis 50:20',
+    cenas:[
+      { id:'j1', titulo:'A túnica de muitas cores', ref:'Gênesis 37:3',     svg:J1 },
+      { id:'j2', titulo:'Os sonhos de José',        ref:'Gênesis 37:5–11',  svg:J2 },
+      { id:'j3', titulo:'José governa no Egito',    ref:'Gênesis 41:41–43', svg:J3 },
+      { id:'j4', titulo:'O reencontro',             ref:'Gênesis 45:1–15',  svg:J4 }
+    ]
+  },
+  {
+    id:'moises', titulo:'Moisés', ref:'Êxodo 2–14',
+    resumo:'O povo de Israel vivia no Egito como escravo, e o rei de lá era muito mau. Para salvar o filhinho, uma mãe colocou o bebê dentro de um cesto e deixou o cesto boiando entre as plantas do rio. A filha do rei encontrou o cesto, gostou do menino e o criou como filho. O nome dele era Moisés. Quando Moisés cresceu, Deus falou com ele do meio de um arbusto que pegava fogo mas não se queimava, e disse: "Vá e tire o meu povo do Egito." Moisés foi até o rei e pediu muitas vezes: "Deixe o meu povo ir!" O rei não queria, mas no fim deixou. Quando o povo chegou à beira do mar e parecia não haver mais saída, Deus abriu um caminho no meio das águas, e todos atravessaram com os pés enxutos.',
+    versiculo:'Não tenham medo. Fiquem firmes e vejam o livramento que o Senhor lhes dará.', versRef:'Êxodo 14:13',
+    cenas:[
+      { id:'m1', titulo:'O cesto no rio',        ref:'Êxodo 2:1–10',    svg:M1 },
+      { id:'m2', titulo:'A sarça que ardia',     ref:'Êxodo 3:1–6',     svg:M2 },
+      { id:'m3', titulo:'Deixe o meu povo ir!',  ref:'Êxodo 5:1',       svg:M3 },
+      { id:'m4', titulo:'A travessia do mar',    ref:'Êxodo 14:21–31',  svg:M4 }
+    ]
+  },
+  {
+    id:'davi', titulo:'Davi', ref:'1 Samuel 16–17',
+    resumo:'Davi era o filho mais novo de Jessé e cuidava das ovelhas do pai. Enquanto tomava conta delas, tocava harpa e cantava para Deus. Um dia o profeta Samuel chegou à casa de Jessé para escolher o novo rei de Israel. Olhou para os irmãos mais velhos, tão altos e fortes, mas Deus disse: as pessoas olham a aparência, eu olho o coração. E foi Davi, o pastorzinho, quem Samuel ungiu com óleo. Algum tempo depois, um guerreiro gigante chamado Golias começou a desafiar o exército de Israel, e todos ficaram com medo. Só Davi não teve. Foi até o ribeiro, escolheu cinco pedras lisas e disse ao gigante: "Você vem contra mim com espada, mas eu vou em nome do Senhor." Girou a funda, a pedra acertou Golias, e o povo de Deus foi salvo.',
+    versiculo:'O Senhor não vê como o homem vê: o homem olha a aparência, mas o Senhor olha o coração.', versRef:'1 Samuel 16:7',
+    cenas:[
+      { id:'d1', titulo:'O pastorzinho',       ref:'1 Samuel 16:11',    svg:D1 },
+      { id:'d2', titulo:'Samuel unge Davi',    ref:'1 Samuel 16:13',    svg:D2 },
+      { id:'d3', titulo:'Davi e Golias',       ref:'1 Samuel 17:45–50', svg:D3 },
+      { id:'d4', titulo:'Davi toca para Deus', ref:'1 Samuel 16:23',    svg:D4 }
+    ]
+  },
+  {
+    id:'jesus', titulo:'Histórias de Jesus', ref:'Marcos, Lucas e João',
+    resumo:'Jesus andou por muitos lugares fazendo o bem e ensinando sobre o amor de Deus. Ele contou que Deus é como um pastor que tem cem ovelhas: se uma se perde, ele deixa as noventa e nove e vai procurar aquela até encontrar — e volta feliz, com a ovelhinha nos ombros. Um dia, Jesus estava num barco com os amigos quando veio uma tempestade tão forte que todos ficaram com medo. Jesus se levantou, falou com o vento e com o mar, e tudo ficou calmo. Em outra ocasião, uma multidão enorme o seguiu até um lugar deserto e ficou com fome. Um menino tinha apenas cinco pães e dois peixinhos. Jesus agradeceu a Deus, repartiu e deu para todo mundo — e ainda sobrou! E quando alguns quiseram afastar as crianças, Jesus disse: deixem as crianças virem a mim. Depois abraçou cada uma e as abençoou.',
+    versiculo:'Deixem vir a mim as crianças e não as impeçam.', versRef:'Marcos 10:14',
+    cenas:[
+      { id:'s1', titulo:'O bom pastor',            ref:'Lucas 15:4–6',     svg:S1 },
+      { id:'s2', titulo:'Jesus acalma a tempestade', ref:'Marcos 4:35–41', svg:S2 },
+      { id:'s3', titulo:'Os pães e os peixes',     ref:'João 6:1–13',      svg:S3 },
+      { id:'s4', titulo:'Jesus e as crianças',     ref:'Marcos 10:13–16',  svg:S4 }
+    ]
+  }
 ];
 
 /* =========================================================
