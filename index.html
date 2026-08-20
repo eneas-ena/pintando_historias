@@ -43,7 +43,7 @@ body{
 h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 
 /* ---------- estrutura de telas ---------- */
-.tela{display:none;min-height:100dvh;flex-direction:column;
+.tela{display:none;min-height:100dvh;flex-direction:column;align-items:center;
   padding:max(14px,env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));}
 .tela.ativa{display:flex}
 .tela > *{width:100%;max-width:520px;margin-left:auto;margin-right:auto}
@@ -148,10 +148,29 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 
 /* ---------- tela: pintura ---------- */
 #telaPintar{padding-left:10px;padding-right:10px}
+.oficina{display:flex;flex-direction:column;flex:1;min-height:0;width:100%}
 .quadro{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin:2px 0 8px}
-.moldura{aspect-ratio:400/520;max-height:100%;max-width:100%;background:#fff;
-  border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden}
-.moldura svg{width:100%;height:100%;display:block;touch-action:none}
+.moldura{position:relative;aspect-ratio:400/520;max-height:100%;max-width:100%;background:#fff;
+  border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;touch-action:none}
+.zoomavel{width:100%;height:100%;transform-origin:center center}
+.moldura svg{width:100%;height:100%;display:block}
+.lupa{position:absolute;top:10px;right:10px;z-index:5;width:48px;height:48px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.94);box-shadow:var(--shadow-sm);cursor:pointer;
+  font-family:'Fredoka',sans-serif;font-size:18px;font-weight:600;color:var(--ink);
+  display:grid;place-items:center}
+.lupa.on{background:var(--violet);color:#fff}
+
+/* no computador: desenho grande à esquerda, cores em coluna à direita */
+@media (min-width:860px) and (min-height:560px){
+  #telaPintar .topo{max-width:900px}
+  #telaPintar .oficina{flex-direction:row;align-items:stretch;gap:26px;max-width:900px}
+  #telaPintar .quadro{margin:0}
+  .lateral{flex:0 0 236px;display:flex;flex-direction:column;justify-content:center;gap:18px}
+  .lateral .cores{grid-template-columns:repeat(4,1fr)}
+  .lateral .acoes-pintura{flex-direction:column;margin-top:0}
+  .lateral .acoes-pintura .btn{width:100%;justify-content:center}
+  .lateral .acoes-pintura .btn-icone{width:100%;height:52px}
+}
 /* IMPORTANTE: a cor de preenchimento NUNCA é declarada aqui.
    Em SVG, uma regra CSS vence o atributo fill — e a pintura não apareceria. */
 .rg{stroke:#2B2140;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;
@@ -255,14 +274,18 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
     </div>
     <button class="btn btn-icone btn-sol" id="btnDesfazer" aria-label="Desfazer">↶</button>
   </div>
-  <div class="quadro" id="quadro"></div>
-  <div class="paleta">
-    <div class="cores" id="cores"></div>
-  </div>
-  <div class="acoes-pintura">
-    <button class="btn btn-icone btn-coral" id="btnZerar" aria-label="Começar de novo">🗑️</button>
-    <button class="btn btn-violeta" id="btnCompartilhar">📤 Guardar</button>
-    <button class="btn btn-folha" id="btnConcluir">✓ Pronto</button>
+  <div class="oficina">
+    <div class="quadro" id="quadro"></div>
+    <div class="lateral">
+      <div class="paleta">
+        <div class="cores" id="cores"></div>
+      </div>
+      <div class="acoes-pintura">
+        <button class="btn btn-icone btn-coral" id="btnZerar" aria-label="Começar de novo">🗑️</button>
+        <button class="btn btn-violeta" id="btnCompartilhar">📤 Guardar</button>
+        <button class="btn btn-folha" id="btnConcluir">✓ Pronto</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -361,8 +384,8 @@ const sol = (cx,cy,r,id) => {
   let raios = '';
   for (let i=0;i<8;i++){
     const a = i*Math.PI/4, x1 = cx+Math.cos(a)*(r+7), y1 = cy+Math.sin(a)*(r+7);
-    const x2 = cx+Math.cos(a)*(r+21), y2 = cy+Math.sin(a)*(r+21);
-    const px = -Math.sin(a)*6, py = Math.cos(a)*6;
+    const x2 = cx+Math.cos(a)*(r+26), y2 = cy+Math.sin(a)*(r+26);
+    const px = -Math.sin(a)*10, py = Math.cos(a)*10;
     raios += `<path class="rg" id="${id}-raio${i}" d="M${x1+px} ${y1+py} L${x2} ${y2} L${x1-px} ${y1-py} Z"/>`;
   }
   return raios + `<circle class="rg" id="${id}" cx="${cx}" cy="${cy}" r="${r}"/>`;
@@ -596,28 +619,84 @@ function abrirHistoria(h){
 }
 
 /* ---------- pintura ---------- */
-function abrirPintura(cena){
-  cenaAtual = cena;
-  pilhaDesfazer = [];
-  $('#tituloCena').textContent = cena.titulo;
-  $('#quadro').innerHTML = `<div class="moldura">${cena.svg}</div>`;
-  svgAtual = $('#quadro svg');
-  const salvo = lerPintura(perfilAtual.id, historiaAtual.id, cena.id).cores;
-  Object.entries(salvo).forEach(([id, cor]) => {
-    const el = svgAtual.querySelector('[id="'+id+'"]'); if (el) el.setAttribute('fill', cor);
-  });
-  svgAtual.addEventListener('pointerdown', aoTocar);
-  mostrar('telaPintar');
+/* ---------- pintura, zoom e arrasto ---------- */
+const NIVEIS = [1, 1.9, 2.8];
+let zoom = 1, panX = 0, panY = 0;
+let arrastando = false, moveu = false, ini = {x:0,y:0}, iniPan = {x:0,y:0};
+
+function aplicarZoom(){
+  const z = $('#quadro .zoomavel'); if (!z) return;
+  const limX = (zoom-1) * z.clientWidth  / 2;
+  const limY = (zoom-1) * z.clientHeight / 2;
+  panX = Math.max(-limX, Math.min(limX, panX));
+  panY = Math.max(-limY, Math.min(limY, panY));
+  z.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+  const b = $('#btnZoom');
+  if (b){
+    b.textContent = zoom === 1 ? '🔍' : String(zoom).replace('.', ',') + '×';
+    b.classList.toggle('on', zoom > 1);
+  }
 }
-function aoTocar(ev){
-  const alvo = ev.target.closest('.rg'); if (!alvo) return;
-  ev.preventDefault();
+function trocarZoom(){
+  zoom = NIVEIS[(NIVEIS.indexOf(zoom) + 1) % NIVEIS.length];
+  if (zoom === 1){ panX = 0; panY = 0; }
+  aplicarZoom();
+}
+function aoDescer(e){
+  arrastando = true; moveu = false;
+  ini = { x:e.clientX, y:e.clientY };
+  iniPan = { x:panX, y:panY };
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
+}
+function aoMover(e){
+  if (!arrastando) return;
+  const dx = e.clientX - ini.x, dy = e.clientY - ini.y;
+  if (Math.abs(dx) > 7 || Math.abs(dy) > 7) moveu = true;
+  if (zoom > 1 && moveu){
+    panX = iniPan.x + dx; panY = iniPan.y + dy;
+    aplicarZoom(); e.preventDefault();
+  }
+}
+function aoSubir(e){
+  if (!arrastando) return;
+  arrastando = false;
+  if (moveu) return;                       /* foi arrasto, não pintura */
+  const sob = document.elementFromPoint(e.clientX, e.clientY);
+  const regiao = sob && sob.closest ? sob.closest('.rg') : null;
+  if (regiao) pintar(regiao);
+}
+function pintar(alvo){
   const anterior = alvo.getAttribute('fill') || '#FFFFFF';
   if (anterior === corAtual) return;
   pilhaDesfazer.push({ id: alvo.id, cor: anterior });
   alvo.setAttribute('fill', corAtual);
   alvo.classList.remove('pop'); void alvo.offsetWidth; alvo.classList.add('pop');
   salvarPintura();
+}
+
+function abrirPintura(cena){
+  cenaAtual = cena;
+  pilhaDesfazer = [];
+  zoom = 1; panX = 0; panY = 0;
+  $('#tituloCena').textContent = cena.titulo;
+  $('#quadro').innerHTML =
+    `<div class="moldura">
+       <button class="lupa" id="btnZoom" aria-label="Aproximar o desenho">🔍</button>
+       <div class="zoomavel">${cena.svg}</div>
+     </div>`;
+  svgAtual = $('#quadro svg');
+  const salvo = lerPintura(perfilAtual.id, historiaAtual.id, cena.id).cores;
+  Object.entries(salvo).forEach(([id, cor]) => {
+    const el = svgAtual.querySelector('[id="'+id+'"]'); if (el) el.setAttribute('fill', cor);
+  });
+  const mold = $('#quadro .moldura');
+  mold.addEventListener('pointerdown', aoDescer);
+  mold.addEventListener('pointermove', aoMover);
+  mold.addEventListener('pointerup', aoSubir);
+  mold.addEventListener('pointercancel', () => { arrastando = false; });
+  $('#btnZoom').addEventListener('click', ev => { ev.stopPropagation(); trocarZoom(); });
+  mostrar('telaPintar');
+  aplicarZoom();
 }
 function salvarPintura(pronto){
   const cores = {};
