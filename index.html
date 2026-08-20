@@ -178,6 +178,8 @@ h1,h2,h3,.ff{font-family:'Fredoka',system-ui,sans-serif;font-weight:600}
 .rg{stroke:#2B2140;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;
   cursor:pointer;transition:fill .12s ease}
 .tinta{pointer-events:none}
+.detalhe{fill:none;stroke:#2B2140;stroke-width:2.4;stroke-linecap:round;
+  stroke-linejoin:round;pointer-events:none}
 .rg.pop{animation:pop .26s ease}
 @keyframes pop{0%{opacity:.35}60%{opacity:1}}
 @media (prefers-reduced-motion:reduce){
@@ -372,143 +374,237 @@ const CORES = ['#E8453C','#F5822B','#F7B32B','#F5E14B','#8BC34A','#3B9E5A','#7FD
 let corAtual = CORES[0];
 
 /* =========================================================
-   DESENHOS — cada região é um caminho fechado e clicável
+   DESENHOS
+   Regras: 1) um objeto = uma silhueta;
+           2) apêndices (rabo, braço, perna) vão ATRÁS,
+              a massa principal cobre a junção;
+           3) detalhe interno é traço, não região.
    ========================================================= */
 const VB = '0 0 400 520';
-/* toda região nasce com fill branco COMO ATRIBUTO — nunca por CSS */
 const prep = c => c.replace(/class="rg"/g, 'class="rg" fill="#FFFFFF"')
-                   .replace(/class="tinta"/g, 'class="tinta" fill="#2B2140"');
+                   .replace(/class="tinta"/g, 'class="tinta" fill="#2B2140"')
+                   .replace(/class="detalhe"/g, 'class="detalhe" fill="none"');
 const svgWrap = (conteudo, id) =>
   `<svg viewBox="${VB}" xmlns="http://www.w3.org/2000/svg" data-cena="${id}">${prep(conteudo)}</svg>`;
-const nuvem = (x,y,e,id) =>
-  `<path class="rg" id="${id}" transform="translate(${x},${y}) scale(${e})" d="M12 48 C2 48 0 40 0 34 C0 26 6 22 14 22 C16 8 30 2 42 6 C50 -2 66 -2 74 8 C88 6 98 16 96 28 C106 30 110 38 106 44 C104 47 100 48 96 48 Z"/>`;
-const sol = (cx,cy,r,id) => {
-  let raios = '';
-  for (let i=0;i<8;i++){
-    const a = i*Math.PI/4, x1 = cx+Math.cos(a)*(r+7), y1 = cy+Math.sin(a)*(r+7);
-    const x2 = cx+Math.cos(a)*(r+26), y2 = cy+Math.sin(a)*(r+26);
-    const px = -Math.sin(a)*10, py = Math.cos(a)*10;
-    raios += `<path class="rg" id="${id}-raio${i}" d="M${x1+px} ${y1+py} L${x2} ${y2} L${x1-px} ${y1-py} Z"/>`;
-  }
-  return raios + `<circle class="rg" id="${id}" cx="${cx}" cy="${cy}" r="${r}"/>`;
-};
-const onda = (y,fim) =>
-  `M0 ${y} C45 ${y-13} 90 ${y+13} 135 ${y} C180 ${y-13} 225 ${y+13} 270 ${y} C312 ${y-11} 356 ${y+11} 400 ${y} L400 ${fim} L0 ${fim} Z`;
-const flor = (x,y,e,id) =>
-  `<g transform="translate(${x},${y}) scale(${e})">
-     <path class="rg" id="${id}-p" d="M0 -20 C10 -20 14 -10 8 -4 C18 -10 26 -2 20 6 C26 14 18 24 8 20 C8 30 -8 30 -8 20 C-18 24 -26 14 -20 6 C-26 -2 -18 -10 -8 -4 C-14 -10 -10 -20 0 -20 Z"/>
-     <circle class="rg" id="${id}-m" cx="0" cy="0" r="7.5"/>
-   </g>`;
-const olho = (cx,cy,r=3.6) => `<circle class="tinta" cx="${cx}" cy="${cy}" r="${r}"/>`;
 
-/* --- Cena 1 · O céu e as águas --- */
+const n2 = v => Math.round(v*10)/10;
+const rg  = (id,d) => `<path class="rg" id="${id}" d="${d}"/>`;
+const det = d => `<path class="detalhe" d="${d}"/>`;
+const pt  = (cx,cy,r) => `<circle class="tinta" cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r)}"/>`;
+const circ = (id,cx,cy,r) => `<circle class="rg" id="${id}" cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r)}"/>`;
+const elip = (id,cx,cy,rx,ry) => `<ellipse class="rg" id="${id}" cx="${n2(cx)}" cy="${n2(cy)}" rx="${n2(rx)}" ry="${n2(ry)}"/>`;
+
+function blobD(cx,cy,r,n,amp){
+  let d='';
+  for(let i=0;i<n;i++){
+    const a1=(i/n)*2*Math.PI-Math.PI/2, a2=((i+1)/n)*2*Math.PI-Math.PI/2, am=(a1+a2)/2;
+    const x1=n2(cx+Math.cos(a1)*r), y1=n2(cy+Math.sin(a1)*r);
+    const x2=n2(cx+Math.cos(a2)*r), y2=n2(cy+Math.sin(a2)*r);
+    const xm=n2(cx+Math.cos(am)*r*amp), ym=n2(cy+Math.sin(am)*r*amp);
+    if(i===0) d+=`M${x1} ${y1}`;
+    d+=` Q${xm} ${ym} ${x2} ${y2}`;
+  }
+  return d+' Z';
+}
+function solD(cx,cy,r,id){
+  const R=r*1.72; let d='';
+  for(let i=0;i<12;i++){
+    const a=(i/12)*2*Math.PI-Math.PI/2, b=((i+0.5)/12)*2*Math.PI-Math.PI/2;
+    d += (i===0?'M':'L')+`${n2(cx+Math.cos(a)*R)} ${n2(cy+Math.sin(a)*R)}`;
+    d += `L${n2(cx+Math.cos(b)*r*1.02)} ${n2(cy+Math.sin(b)*r*1.02)}`;
+  }
+  return rg(id+'-raios', d+'Z') + circ(id,cx,cy,r);
+}
+const nuvem = (x,y,e,id) =>
+  `<path class="rg" id="${id}" transform="translate(${x},${y}) scale(${e})" d="M14 46 C3 46 -2 37 2 29 C6 21 14 19 20 21 C22 8 34 1 46 5 C55 -5 73 -4 80 8 C94 4 106 15 103 27 C112 31 113 41 106 45 C103 47 100 46 96 46 Z"/>`;
+const ondaD = (y,fim) =>
+  `M0 ${y} C45 ${y-13} 90 ${y+13} 135 ${y} C180 ${y-13} 225 ${y+13} 270 ${y} C312 ${y-11} 356 ${y+11} 400 ${y} L400 ${fim} L0 ${fim} Z`;
+const linhaOnda = y =>
+  `M24 ${y} C64 ${y-8} 104 ${y+8} 144 ${y} C184 ${y-8} 224 ${y+8} 264 ${y} C304 ${y-8} 340 ${y+8} 376 ${y}`;
+
+function arvore(x, baseY, e, id){
+  const h=80*e, w=15*e;
+  const tronco = rg(id+'-tronco',
+    `M${n2(x-w)} ${n2(baseY)} L${n2(x-w*0.6)} ${n2(baseY-h)} L${n2(x+w*0.6)} ${n2(baseY-h)} L${n2(x+w)} ${n2(baseY)} Z`);
+  const r=54*e, cy=baseY-h-r*0.42;
+  return tronco + rg(id+'-copa', blobD(x,cy,r,7,1.2));
+}
+function flor(x,y,e,id){
+  const r=17*e;
+  return rg(id+'-caule', `M${n2(x-3.5*e)} ${n2(y+r*3.6)} L${n2(x-3.5*e)} ${n2(y+r*0.5)} L${n2(x+3.5*e)} ${n2(y+r*0.5)} L${n2(x+3.5*e)} ${n2(y+r*3.6)} Z`)
+       + rg(id+'-folha', `M${n2(x+3*e)} ${n2(y+r*2.0)} C${n2(x+20*e)} ${n2(y+r*1.4)} ${n2(x+25*e)} ${n2(y+r*2.6)} ${n2(x+15*e)} ${n2(y+r*2.9)} C${n2(x+9*e)} ${n2(y+r*3.0)} ${n2(x+5*e)} ${n2(y+r*2.6)} ${n2(x+3*e)} ${n2(y+r*2.0)} Z`)
+       + rg(id+'-petalas', blobD(x,y,r,6,1.85))
+       + circ(id+'-miolo',x,y,r*0.4);
+}
+const grama = (x,y,e=1) =>
+  det(`M${x} ${y} C${n2(x-4*e)} ${n2(y-13*e)} ${n2(x-8*e)} ${n2(y-17*e)} ${n2(x-12*e)} ${n2(y-20*e)}`)
++ det(`M${x} ${y} L${x} ${n2(y-22*e)}`)
++ det(`M${x} ${y} C${n2(x+4*e)} ${n2(y-13*e)} ${n2(x+8*e)} ${n2(y-17*e)} ${n2(x+12*e)} ${n2(y-20*e)}`);
+
+function ave(x,y,e,id){
+  return `<g transform="translate(${x},${y}) scale(${e})">`
+   + rg(id+'-corpo','M-52 -17 L-25 -5 C-23 -19 -11 -29 5 -29 C19 -29 30 -21 33 -11 L51 -6 L33 1 C33 13 20 23 4 23 C-10 23 -22 15 -25 5 L-52 21 C-46 8 -46 -4 -52 -17 Z')
+   + det('M-8 -3 C2 -15 17 -15 23 -6')
+   + pt(19,-19,3.4)
+   + `</g>`;
+}
+
+/* ---------- CENA 1 · O céu e as águas ---------- */
 const CENA1 = svgWrap(`
   <rect class="rg" id="c1-ceu" x="0" y="0" width="400" height="520"/>
-  ${sol(322,74,36,'c1-sol')}
-  ${nuvem(28,96,1.15,'c1-n1')}
-  ${nuvem(206,44,0.85,'c1-n2')}
-  ${nuvem(46,182,0.95,'c1-n3')}
-  ${nuvem(224,164,1.1,'c1-n4')}
-  <path class="rg" id="c1-a1" d="${onda(292,520)}"/>
-  <path class="rg" id="c1-a2" d="${onda(336,520)}"/>
-  <path class="rg" id="c1-a3" d="${onda(382,520)}"/>
-  <path class="rg" id="c1-a4" d="${onda(428,520)}"/>
-  <path class="rg" id="c1-a5" d="${onda(474,520)}"/>
+  ${solD(316,80,36,'c1-sol')}
+  ${nuvem(20,110,1.25,'c1-n1')}
+  ${nuvem(150,30,0.95,'c1-n2')}
+  ${nuvem(46,206,1.05,'c1-n3')}
+  ${nuvem(238,168,1.2,'c1-n4')}
+  ${rg('c1-a1', ondaD(292,520))}
+  ${rg('c1-a2', ondaD(338,520))}
+  ${rg('c1-a3', ondaD(384,520))}
+  ${rg('c1-a4', ondaD(430,520))}
+  ${rg('c1-a5', ondaD(476,520))}
+  ${det(linhaOnda(316))}${det(linhaOnda(362))}${det(linhaOnda(408))}${det(linhaOnda(454))}${det(linhaOnda(500))}
 `,'c1');
 
-/* --- Cena 2 · A terra e as plantas --- */
+/* ---------- CENA 2 · A terra e as plantas ---------- */
 const CENA2 = svgWrap(`
   <rect class="rg" id="c2-ceu" x="0" y="0" width="400" height="520"/>
-  ${sol(330,66,32,'c2-sol')}
-  ${nuvem(36,58,0.85,'c2-n1')}
-  <path class="rg" id="c2-morro1" d="M0 268 C64 214 138 226 212 266 L212 520 L0 520 Z"/>
-  <path class="rg" id="c2-morro2" d="M188 270 C258 216 330 230 400 262 L400 520 L188 520 Z"/>
-  <path class="rg" id="c2-chao" d="M0 306 C120 292 280 292 400 304 L400 520 L0 520 Z"/>
-  <path class="rg" id="c2-rio" d="M152 306 C122 356 202 386 172 436 C152 470 192 494 178 520 L238 520 C252 494 218 470 238 436 C268 386 188 356 218 306 Z"/>
-  <path class="rg" id="c2-tronco1" d="M52 436 L52 362 L78 362 L78 436 Z"/>
-  <circle class="rg" id="c2-copa1a" cx="65" cy="338" r="40"/>
-  <circle class="rg" id="c2-copa1b" cx="30" cy="360" r="25"/>
-  <circle class="rg" id="c2-copa1c" cx="98" cy="358" r="27"/>
-  <path class="rg" id="c2-tronco2" d="M320 424 L320 358 L342 358 L342 424 Z"/>
-  <circle class="rg" id="c2-copa2a" cx="331" cy="334" r="35"/>
-  <circle class="rg" id="c2-copa2b" cx="302" cy="352" r="22"/>
-  <circle class="rg" id="c2-copa2c" cx="362" cy="350" r="24"/>
-  <ellipse class="rg" id="c2-arbusto1" cx="96" cy="480" rx="36" ry="23"/>
-  <ellipse class="rg" id="c2-arbusto2" cx="296" cy="466" rx="40" ry="25"/>
-  ${flor(44,432,0.8,'c2-f1')}
-  ${flor(120,494,0.9,'c2-f2')}
-  ${flor(300,404,0.75,'c2-f3')}
-  ${flor(362,492,0.85,'c2-f4')}
+  ${solD(338,64,30,'c2-sol')}
+  ${nuvem(18,44,0.9,'c2-n1')}
+  ${nuvem(154,26,0.7,'c2-n2')}
+  ${rg('c2-morro','M0 232 C50 168 112 156 170 192 C198 210 214 184 250 162 C310 126 362 162 400 192 L400 520 L0 520 Z')}
+  ${rg('c2-chao','M0 274 C120 258 280 258 400 270 L400 520 L0 520 Z')}
+  ${rg('c2-lago','M84 468 C84 440 136 420 202 420 C268 420 320 440 320 468 C320 496 268 514 202 514 C136 514 84 496 84 468 Z')}
+  ${det('M124 462 C148 452 176 450 200 454')}${det('M212 486 C240 484 268 476 288 464')}
+  ${arvore(66,470,1.12,'c2-arv1')}
+  ${arvore(342,442,0.84,'c2-arv2')}
+  ${rg('c2-arbusto1', blobD(46,492,24,5,1.32))}
+  ${rg('c2-arbusto2', blobD(356,494,22,5,1.32))}
+  ${flor(26,442,0.8,'c2-f1')}
+  ${flor(296,400,0.62,'c2-f2')}
+  ${flor(374,414,0.62,'c2-f3')}
+  ${grama(40,512,0.95)}${grama(360,512,0.9)}${ave(104,116,0.62,'c2-ave1')}${ave(224,70,0.48,'c2-ave2')}
 `,'c2');
 
-/* --- Cena 3 · Os peixes e as aves --- */
-const ave = (x,y,e,id) =>
-  `<path class="rg" id="${id}" transform="translate(${x},${y}) scale(${e})" d="M0 0 C10 -13 24 -13 32 -2 C40 -13 54 -13 64 0 C50 7 39 5 32 -2 C25 5 13 7 0 0 Z"/>`;
-const peixe = (x,y,e,id) =>
-  `<g transform="translate(${x},${y}) scale(${e})">
-     <path class="rg" id="${id}-r" d="M0 6 L-28 -12 L-28 24 Z"/>
-     <path class="rg" id="${id}-c" d="M0 0 C12 -18 42 -20 58 -6 C68 3 68 11 58 21 C42 34 12 30 0 12 C-3 8 -3 4 0 0 Z"/>
-     ${olho(46,4,3.4)}
-   </g>`;
+/* ---------- CENA 3 · Os peixes e as aves ---------- */
+function peixe(x,y,e,id){
+  return `<g transform="translate(${x},${y}) scale(${e})">`
+   + rg(id+'-corpo','M-56 -21 C-44 -15 -33 -7 -26 2 C-16 -14 4 -25 26 -25 C54 -25 78 -9 87 4 C78 17 54 33 26 33 C4 33 -16 22 -26 6 C-33 15 -44 23 -56 29 C-51 13 -51 -5 -56 -21 Z')
+   + det('M46 -14 C40 -4 40 10 46 20')
+   + pt(62,-3,4)
+   + `</g>`;
+}
 const CENA3 = svgWrap(`
   <rect class="rg" id="c3-ceu" x="0" y="0" width="400" height="520"/>
-  ${sol(58,62,28,'c3-sol')}
-  ${nuvem(230,42,0.9,'c3-n1')}
-  ${ave(88,128,1.05,'c3-ave1')}
-  ${ave(196,88,0.8,'c3-ave2')}
-  ${ave(276,142,0.95,'c3-ave3')}
-  <path class="rg" id="c3-mar" d="${onda(238,520)}"/>
-  <path class="rg" id="c3-mar2" d="${onda(300,520)}"/>
-  <path class="rg" id="c3-jato" d="M168 300 C162 278 150 266 152 252 C160 262 172 266 176 256 C182 270 176 288 182 300 Z"/>
-  <path class="rg" id="c3-baleia" d="M116 348 C116 306 168 290 214 297 C256 304 282 324 287 352 C290 380 260 402 214 403 C162 404 116 388 116 348 Z"/>
-  <path class="rg" id="c3-rabo" d="M287 352 C302 326 332 310 350 304 C344 330 346 360 352 386 C332 380 302 372 287 352 Z"/>
-  ${olho(158,332,5)}
-  ${peixe(96,452,0.9,'c3-p1')}
-  ${peixe(226,486,0.7,'c3-p2')}
-  ${peixe(322,436,0.8,'c3-p3')}
-  <path class="rg" id="c3-alga1" d="M28 520 C16 488 40 466 28 438 C48 460 56 494 50 520 Z"/>
-  <path class="rg" id="c3-alga2" d="M372 520 C384 492 362 470 374 444 C354 466 346 496 352 520 Z"/>
+  ${solD(58,58,26,'c3-sol')}
+  ${nuvem(232,26,0.95,'c3-n1')}
+  ${ave(190,80,1.0,'c3-ave1')}
+  ${ave(320,150,0.8,'c3-ave2')}
+  ${ave(96,160,0.7,'c3-ave3')}
+  ${rg('c3-mar', ondaD(210,520))}
+  ${rg('c3-mar2', ondaD(300,520))}
+  ${rg('c3-mar3', ondaD(414,520))}
+  ${rg('c3-jato','M136 272 L136 242 C116 234 106 210 116 192 C120 212 132 224 140 230 C140 210 134 192 142 178 C150 192 146 210 146 230 C154 224 166 212 170 192 C180 210 168 234 148 242 L148 272 Z')}
+  ${rg('c3-cauda','M84 300 C58 276 30 258 4 250 C18 274 24 290 26 304 L84 304 Z M84 316 C58 340 30 358 4 366 C18 342 24 326 26 312 L84 312 Z')}
+  ${rg('c3-baleia','M44 322 C44 282 96 256 164 256 C240 256 302 288 306 326 C308 352 272 368 202 370 C122 372 44 360 44 322 Z')}
+  ${rg('c3-nadadeira','M176 356 C192 380 224 388 240 378 C226 366 206 356 190 352 Z')}
+  ${det('M302 334 C272 348 202 354 132 352')}
+  ${pt(272,306,5.5)}
+  ${peixe(112,458,0.7,'c3-p1')}
+  ${peixe(300,478,0.56,'c3-p2')}
+  ${rg('c3-alga1','M16 520 C0 484 32 458 16 424 C46 452 56 494 48 520 Z')}
+  ${rg('c3-alga2','M378 520 C394 488 364 462 380 430 C352 458 344 494 352 520 Z')}
+  ${det(linhaOnda(250))}${det(linhaOnda(444))}
 `,'c3');
 
-/* --- Cena 4 · Os animais e as pessoas --- */
+/* ---------- CENA 4 · Os animais e as pessoas ---------- */
+function pessoa(x, chao, e, id, tipo){
+  const cr=21*e, cy=chao-124*e, ombro=cy+cr+9*e;
+  const bracos = rg(id+'-bracos',
+    `M${n2(x-20*e)} ${n2(ombro+2*e)} L${n2(x-42*e)} ${n2(ombro+12*e)} L${n2(x-47*e)} ${n2(ombro+50*e)} L${n2(x-31*e)} ${n2(ombro+53*e)} Z`
+  + ` M${n2(x+20*e)} ${n2(ombro+2*e)} L${n2(x+42*e)} ${n2(ombro+12*e)} L${n2(x+47*e)} ${n2(ombro+50*e)} L${n2(x+31*e)} ${n2(ombro+53*e)} Z`);
+  const tunica = rg(id+'-tunica',
+      `M${n2(x-26*e)} ${n2(ombro+4*e)} C${n2(x-26*e)} ${n2(ombro-10*e)} ${n2(x+26*e)} ${n2(ombro-10*e)} ${n2(x+26*e)} ${n2(ombro+4*e)}`
+    + ` L${n2(x+36*e)} ${n2(chao)} L${n2(x-36*e)} ${n2(chao)} Z`);
+  const maos = circ(id+'-maoE', x-39*e, ombro+58*e, 9.5*e) + circ(id+'-maoD', x+39*e, ombro+58*e, 9.5*e);
+  const cabelo = tipo==='longo' ? rg(id+'-cabelo', blobD(x, cy+14*e, cr*1.52, 8, 1.12)) : '';
+  const cabeca = circ(id+'-cabeca', x, cy, cr);
+  const capa = tipo==='curto'
+    ? rg(id+'-cabelo',
+        `M${n2(x-cr)} ${n2(cy-4*e)} C${n2(x-cr*1.05)} ${n2(cy-cr*1.55)} ${n2(x+cr*1.05)} ${n2(cy-cr*1.55)} ${n2(x+cr)} ${n2(cy-4*e)}`
+      + ` C${n2(x+cr*0.55)} ${n2(cy-cr*0.8)} ${n2(x-cr*0.55)} ${n2(cy-cr*0.8)} ${n2(x-cr)} ${n2(cy-4*e)} Z`)
+    : '';
+  const rosto = pt(x-7.5*e, cy-3*e, 3*e) + pt(x+7.5*e, cy-3*e, 3*e)
+    + det(`M${n2(x-7*e)} ${n2(cy+7*e)} C${n2(x-2*e)} ${n2(cy+13*e)} ${n2(x+2*e)} ${n2(cy+13*e)} ${n2(x+7*e)} ${n2(cy+7*e)}`);
+  return bracos+maos+tunica+cabelo+cabeca+capa+rosto;
+}
+
+function leao(x, chao, e, id){
+  const s=e, cy=chao-104*s, r=36*s;
+  const cauda = rg(id+'-cauda',
+    `M${n2(x+40*s)} ${n2(chao-20*s)} C${n2(x+72*s)} ${n2(chao-26*s)} ${n2(x+84*s)} ${n2(chao-52*s)} ${n2(x+74*s)} ${n2(chao-70*s)}`
+  + ` C${n2(x+94*s)} ${n2(chao-58*s)} ${n2(x+92*s)} ${n2(chao-12*s)} ${n2(x+42*s)} ${n2(chao-6*s)} Z`);
+  const tufo = rg(id+'-tufo', blobD(x+80*s, chao-74*s, 11*s, 5, 1.3));
+  const corpo = rg(id+'-corpo',
+    `M${n2(x-48*s)} ${n2(chao)} C${n2(x-52*s)} ${n2(chao-38*s)} ${n2(x-32*s)} ${n2(chao-64*s)} ${n2(x)} ${n2(chao-64*s)}`
+  + ` C${n2(x+32*s)} ${n2(chao-64*s)} ${n2(x+52*s)} ${n2(chao-38*s)} ${n2(x+48*s)} ${n2(chao)} Z`);
+  const patas = elip(id+'-pataE', x-20*s, chao-9*s, 13*s, 9*s)
+              + elip(id+'-pataD', x+20*s, chao-9*s, 13*s, 9*s);
+  const orelhas = circ(id+'-orelhaE', x-26*s, cy-28*s, 11*s) + circ(id+'-orelhaD', x+26*s, cy-28*s, 11*s);
+  const juba = rg(id+'-juba', blobD(x, cy, r*1.34, 10, 1.16));
+  const cabeca = circ(id+'-cabeca', x, cy, r*0.8);
+  const focinho = elip(id+'-focinho', x, cy+13*s, 16*s, 11*s);
+  const rosto = pt(x-11*s, cy-5*s, 3.4*s) + pt(x+11*s, cy-5*s, 3.4*s)
+    + det(`M${n2(x-6*s)} ${n2(cy+7*s)} L${n2(x+6*s)} ${n2(cy+7*s)} L${n2(x)} ${n2(cy+13*s)} Z`)
+    + det(`M${n2(x)} ${n2(cy+13*s)} L${n2(x)} ${n2(cy+19*s)}`);
+  return cauda+tufo+corpo+patas+orelhas+juba+cabeca+focinho+rosto;
+}
+
+function elefante(x, chao, e, id){
+  const s=e, P=(px,py)=>`${n2(x+px*s)} ${n2(chao+py*s)}`;
+  const corpo = rg(id+'-corpo',
+    `M${P(-54,0)} C${P(-60,-42)} ${P(-40,-68)} ${P(0,-68)} C${P(40,-68)} ${P(60,-42)} ${P(54,0)} Z`);
+  const orelhas = elip(id+'-orelhaE', x-58*s, chao-104*s, 30*s, 35*s)
+                + elip(id+'-orelhaD', x+58*s, chao-104*s, 30*s, 35*s);
+  const tromba = rg(id+'-tromba',
+    `M${P(-14,-104)} C${P(-17,-58)} ${P(-15,-28)} ${P(-3,-16)} C${P(10,-5)} ${P(24,-12)} ${P(26,-26)}`
+  + ` C${P(15,-19)} ${P(6,-23)} ${P(4,-36)} C${P(2,-60)} ${P(14,-80)} ${P(14,-104)} Z`);
+  const presas = rg(id+'-presas',
+    `M${P(-30,-86)} C${P(-35,-62)} ${P(-32,-48)} ${P(-25,-40)} C${P(-22,-56)} ${P(-21,-72)} ${P(-20,-86)} Z`
+  + ` M${P(30,-86)} C${P(35,-62)} ${P(32,-48)} ${P(25,-40)} C${P(22,-56)} ${P(21,-72)} ${P(20,-86)} Z`);
+  const cabeca = circ(id+'-cabeca', x, chao-104*s, 43*s);
+  const rosto = pt(x-18*s, chao-116*s, 4.4*s) + pt(x+18*s, chao-116*s, 4.4*s);
+  return corpo+orelhas+tromba+presas+cabeca+rosto;
+}
+
+function coelho(x, chao, e, id){
+  const s=e;
+  const P=(px,py)=>`${n2(x+px*s)} ${n2(chao+py*s)}`;
+  const orelhas = rg(id+'-orelhas',
+    `M${P(-14,-40)} C${P(-24,-72)} ${P(-19,-92)} ${P(-9,-92)} C${P(-1,-92)} ${P(-3,-66)} ${P(-4,-40)} Z`
+  + ` M${P(14,-40)} C${P(24,-72)} ${P(19,-92)} ${P(9,-92)} C${P(1,-92)} ${P(3,-66)} ${P(4,-40)} Z`);
+  const corpo = rg(id+'-corpo',
+    `M${P(-28,0)} C${P(-33,-36)} ${P(-19,-52)} ${P(0,-52)} C${P(19,-52)} ${P(33,-36)} ${P(28,0)} Z`);
+  const rosto = pt(x-9*s, chao-32*s, 3.2*s) + pt(x+9*s, chao-32*s, 3.2*s)
+    + det(`M${P(0,-24)} L${P(0,-19)}`);
+  return orelhas+corpo+rosto;
+}
+
 const CENA4 = svgWrap(`
   <rect class="rg" id="c4-ceu" x="0" y="0" width="400" height="520"/>
-  ${sol(330,62,30,'c4-sol')}
-  ${nuvem(28,54,0.8,'c4-n1')}
-  <path class="rg" id="c4-chao" d="M0 322 C120 304 280 304 400 320 L400 520 L0 520 Z"/>
-  <path class="rg" id="c4-tronco" d="M28 334 L28 244 L50 244 L50 334 Z"/>
-  <circle class="rg" id="c4-copaA" cx="39" cy="226" r="37"/>
-  <circle class="rg" id="c4-copaB" cx="12" cy="248" r="21"/>
-  <circle class="rg" id="c4-copaC" cx="66" cy="246" r="23"/>
-
-  <path class="rg" id="c4-g-pernas" d="M306 418 L306 470 L316 470 L316 418 Z M340 420 L340 472 L350 472 L350 420 Z"/>
-  <ellipse class="rg" id="c4-g-corpo" cx="330" cy="398" rx="42" ry="27"/>
-  <path class="rg" id="c4-g-pescoco" d="M348 386 L340 296 L364 294 L374 382 Z"/>
-  <ellipse class="rg" id="c4-g-cabeca" cx="360" cy="286" rx="21" ry="14"/>
-  ${olho(366,282,3.2)}
-
-  <path class="rg" id="c4-h-cabelo" d="M204 356 C204 336 218 328 230 328 C242 328 256 336 256 356 C256 344 246 340 230 340 C214 340 214 346 204 356 Z"/>
-  <circle class="rg" id="c4-h-cabeca" cx="230" cy="350" r="17"/>
-  <path class="rg" id="c4-h-corpo" d="M213 368 L247 368 L256 438 L204 438 Z"/>
-  ${olho(224,349,2.6)}${olho(236,349,2.6)}
-  <circle class="rg" id="c4-m-cabeca" cx="176" cy="348" r="17"/>
-  <path class="rg" id="c4-m-corpo" d="M159 366 L193 366 L201 436 L151 436 Z"/>
-  ${olho(170,347,2.6)}${olho(182,347,2.6)}
-
-  <ellipse class="rg" id="c4-e-corpo" cx="292" cy="466" rx="50" ry="34"/>
-  <path class="rg" id="c4-e-tromba" d="M238 456 C224 478 228 504 244 512 C238 494 238 474 250 462 Z"/>
-  <circle class="rg" id="c4-e-cabeca" cx="248" cy="450" r="27"/>
-  <ellipse class="rg" id="c4-e-orelha" cx="252" cy="440" rx="15" ry="20"/>
-  ${olho(238,444,3.4)}
-
-  <ellipse class="rg" id="c4-l-corpo" cx="146" cy="472" rx="37" ry="26"/>
-  <circle class="rg" id="c4-l-juba" cx="102" cy="452" r="35"/>
-  <circle class="rg" id="c4-l-cabeca" cx="102" cy="452" r="22"/>
-  ${olho(95,448,3.2)}${olho(110,448,3.2)}
-
-  <path class="rg" id="c4-c-orelhas" d="M196 492 C192 470 194 456 200 456 C206 456 208 470 206 490 Z M212 492 C210 470 214 456 220 456 C226 456 226 472 220 492 Z"/>
-  <ellipse class="rg" id="c4-c-corpo" cx="208" cy="500" rx="21" ry="17"/>
-  ${olho(202,497,2.8)}
+  ${solD(342,54,27,'c4-sol')}
+  ${nuvem(18,34,0.85,'c4-n1')}
+  ${nuvem(158,18,0.6,'c4-n2')}
+  ${ave(108,124,0.64,'c4-ave1')}
+  ${ave(256,88,0.5,'c4-ave2')}
+  ${rg('c4-morro','M0 236 C64 180 158 190 230 228 C288 258 350 222 400 230 L400 520 L0 520 Z')}
+  ${rg('c4-chao','M0 282 C120 266 280 266 400 278 L400 520 L0 520 Z')}
+  ${arvore(46,340,0.6,'c4-arv')}${rg('c4-arbusto', blobD(212,322,20,5,1.3))}
+  ${elefante(336,452,0.62,'c4-ele')}
+  ${leao(52,506,0.84,'c4-leao')}
+  ${pessoa(154,502,1.06,'c4-h','curto')}
+  ${pessoa(236,506,1.02,'c4-m','longo')}
+  ${coelho(300,516,0.6,'c4-coelho')}
+  ${grama(20,514,0.85)}${grama(384,510,0.8)}
 `,'c4');
 
 /* =========================================================
@@ -757,6 +853,10 @@ async function gerarPNG(){
     el.setAttribute('stroke-linejoin','round');
   });
   clone.querySelectorAll('.tinta').forEach(el => el.setAttribute('fill','#2B2140'));
+  clone.querySelectorAll('.detalhe').forEach(el => {
+    el.setAttribute('fill','none'); el.setAttribute('stroke','#2B2140');
+    el.setAttribute('stroke-width','2.4'); el.setAttribute('stroke-linecap','round');
+  });
   const texto = new XMLSerializer().serializeToString(clone);
   const url = URL.createObjectURL(new Blob([texto], { type:'image/svg+xml;charset=utf-8' }));
   const img = new Image();
